@@ -30,9 +30,10 @@ def getWho(chat_id):
         with open("chatStorage/" + str(chat_id) + "whoArray.csv", "r+") as csvfile:
             reader = csv.DictReader(csvfile)
             whoArrayCurrent = list(reader)
+            print(whoArrayCurrent)
             return random.choice(whoArrayCurrent)['who']
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         return "[undefined]"
 def whoCouldItBe(chat_id):
     response = ""
@@ -161,8 +162,6 @@ def overwrite_response(s, name, chat_id):
 
     return s
 
-
-
 def is_valid_text_overwrite(s):
     theString = s.lower()
     valid = "/who" in theString
@@ -207,3 +206,17 @@ def whoDefine(chat_id, messageText):
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
         return False
+def whoAdd(chat_id, messageText):
+    try:
+        if len(messageText) > len("/whoadd "):
+            with open("chatStorage/" + str(chat_id) + "whoArray.csv", "r+") as csvfile:
+                reader = csv.DictReader(csvfile)
+                whoArrayCurrent = []
+                for row in reader:
+                    whoArrayCurrent.append(row['who'])
+                myStr = ", ".join(whoArrayCurrent)
+            return whoDefine(chat_id, "/whodefine " + myStr + ", " + messageText.replace("/whoadd ", ""))
+        else:
+            return False
+    except Exception:
+        return whoDefine(chat_id, messageText.replace("whoadd ", "whodefine "))
