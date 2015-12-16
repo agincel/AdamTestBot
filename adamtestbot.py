@@ -48,7 +48,7 @@ previousTime = datetime.datetime.now().time()
 currentTime = 0
 
 instanceAge = 0
-refreshRate = 0.2
+refreshRate = 0.1
 user_id = 0
 
 builtins.blazeDB = Base('chatStorage/blaze.pdl') #The path to the database
