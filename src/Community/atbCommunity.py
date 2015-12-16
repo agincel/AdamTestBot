@@ -11,7 +11,6 @@ import re
 import json
 import traceback
 import os
-import psutil
 import telegram
 
 from .. import atbSendFunctions as atbSendFunctions
