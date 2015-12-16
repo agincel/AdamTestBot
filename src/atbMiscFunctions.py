@@ -258,7 +258,7 @@ def eightBall():
     elif x == 12:
         return telegram.emoji.Emoji.CRYING_FACE
     elif x == 13:
-        return telegram.emoji.Emoji.SMILING_FACE
+        return telegram.emoji.Emoji.WHITE_SMILING_FACE
     elif x == 14:
         return telegram.emoji.Emoji.FEARFUL_FACE
     elif x == 15:
