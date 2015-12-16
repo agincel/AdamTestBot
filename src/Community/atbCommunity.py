@@ -11,14 +11,14 @@ import re
 import json
 import traceback
 import os
-
+import psutil
 import telegram
 
-from .. import atbSendFunctions
-from .. import atbMiscFunctions
+from .. import atbSendFunctions as atbSendFunctions
+from .. import atbMiscFunctions as atbMiscFunctions
 
 from pydblite import Base #The PyDbLite stuff
-import __builtin__
+import builtins
 
 #If you make your own python files for processing data, put them
 #In the community folder and import them here:
@@ -34,20 +34,18 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             atbSendFunctions.sendText(bot, chat_id, givenText, replyingMessageID, keyboardLayout)
 
     def sendPhoto(imageName):
-        atbSendFunctions.sendPhoto(bot, chat_id, "images/"+ imageName)
+        atbSendFunctions.sendPhoto(bot, chat_id, "images/" + imageName)
 
     def sendSticker(stickerName):
-        atbSendFunctions.sendSticker(bot, chat_id, "stickers/"+ stickerName)
+        atbSendFunctions.sendSticker(bot, chat_id, "stickers/" + stickerName)
 
     def passSpamCheck():
         return atbMiscFunctions.spamCheck(chat_id, currentMessage.date)
-
 
     try:
         chatInstanceArray[chat_id]['checking'] = True
     except Exception:
         chatInstanceArray[chat_id] = {'checking': True, 'adminDisable': False, 'spamTimestamp': 0, 'shottyTimestamp': 0, 'shottyWinner': "", 'checkingVehicles': False, 'whoArray': []}
-
 
     try:
         #commands go here, in this if-elif block. Python doesn't have switch statements.
@@ -177,7 +175,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         valueSuccessfullyChanged = True
                         userWasFound = True
                 db.commit()
-                
+
                 if not userWasFound:
                     db.insert(currentMessage.reply_to_message.from_user.id, currentMessage.reply_to_message.from_user.first_name, 1)
                     db.commit()
@@ -186,11 +184,20 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     sendText("Robyn hissed at " + currentMessage.reply_to_message.from_user.first_name + ".")
 
         elif parsedCommand == "/water":
-            if (random.randint(0, 1) == 0):
-                sendSticker("water.webp")
-            else:
-                sendSticker("hoboken_water.webp")
-
+            if passSpamCheck():
+                if (random.randint(0, 1) == 0):
+                    sendSticker("water.webp")
+                else:
+                    sendSticker("hoboken_water.webp")
+        elif parsedCommand == "/sysinfo":
+            if passSpamCheck():
+                cpu = []
+                for x in range(3):
+                    cpu.append(psutil.cpu_percent(interval=1))
+                cpuavg = round(sum(cpu) / float(len(cpu)), 1)
+                memuse = psutil.virtual_memory()[2]
+                diskuse = psutil.disk_usage('/')[3]
+                sendText("The CPU uasge is " + str(cpuavg) + "%, the memory usage is " + str(memuse) + "%, and " + str(diskuse) + "% of the disk has been used.")
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
             response = "/mom - get the camera\n"
@@ -202,7 +209,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/rip (something) - I can't believe they're dead!\n"
             response += "/hiss stats - see how many time Robyn has hissed at people\n"
             response += "/scrub or /scrub stats - see who sponsors me or how many times Matt Gomez has called you a scrub\n"
-            response += "/water - does this water look brown to you?"
+            response += "/water - does this water look brown to you?\n"
+            response += "/sysinfo - Gets server performance info."
             sendText(response)
 
         else:
@@ -210,5 +218,5 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         return True
     except Exception:
-        print traceback.format_exc()
+        print(traceback.format_exc())
         return False
