@@ -25,3 +25,12 @@ def sendSticker(bot, chat_id, sticker):
     bot.sendChatAction(chat_id=chat_id, action='typing')
     print("Sending sticker to " + str(chat_id))
     bot.sendSticker(chat_id=chat_id, sticker=open(sticker, "rb"))
+
+def sendVideo(bot, chat_id, videoPath):
+    bot.sendChatAction(chat_id=chat_id, action='upload_video')
+    print("Sending video to " + str(chat_id))
+    bot.sendVideo(chat_id=chat_id, video=open(videoPath, "rb"))
+def sendAudio(bot, chat_id, audioPath):
+    bot.sendChatAction(chat_id=chat_id, action='upload_audio')
+    print("Sending audio to " + str(chat_id))
+    bot.sendAudio(chat_id=chat_id, audio=open(audioPath, "rb"))

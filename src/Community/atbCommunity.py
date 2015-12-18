@@ -39,6 +39,12 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
     def sendSticker(stickerName):
         atbSendFunctions.sendSticker(bot, chat_id, "stickers/" + stickerName)
 
+    def sendAudio(audioName):
+        atbSendFunctions.sendAudio(bot, chat_id, "audio/" + audioName)
+
+    def sendVideo(videoName):
+        atbSendFunctions.sendVideo(bot, chat_id, "videos/" + videoName)
+
     def passSpamCheck():
         return atbMiscFunctions.spamCheck(chat_id, currentMessage.date)
 
