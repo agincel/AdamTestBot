@@ -191,7 +191,7 @@ def ageCommand(instanceAge):
         seconds = 1
     locals_ = locals()
     magnitudes_str = ("{n} {magnitude}".format(n=int(locals_[magnitude]), magnitude=magnitude)
-                      for magnitude in ("day(s)", "hour(s)", "minute(s)", "second(s)") if locals_[magnitude])
+                      for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
     eta_str = ", ".join(magnitudes_str)
     return eta_str
 
