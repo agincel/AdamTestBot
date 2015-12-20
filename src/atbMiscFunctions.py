@@ -183,51 +183,17 @@ def objectionResponse(currentMessage):
         return "Object to messages by replying to them with /objection."
 
 def ageCommand(instanceAge):
-    weeks = int(instanceAge / (3600 * 24 * 7))
-    days = int((instanceAge - (weeks * 3600 * 24 * 7)) / (3600 * 24))
-    hours = int((instanceAge - (weeks * 3600 * 24 * 7) - (days * (3600 * 24))) / 3600)
-    minutes = int((instanceAge - (weeks * 3600 * 24 * 7) - (days * (3600 * 24)) - (hours * 3600)) / 60)
-    seconds = int((instanceAge % 60))
-
-    stringWeeks = str(weeks) + "w"
-
-    stringDays = str(days) + "d"
-
-    stringHours = ""
-    if hours < 10:
-        stringHours = "0" + str(hours)
-    else:
-        stringHours = str(hours)
-    stringHours += "h"
-
-    stringMinutes = ""
-    if minutes < 10:
-        stringMinutes = "0" + str(minutes)
-    else:
-        stringMinutes = str(minutes)
-    stringMinutes += "m"
-
-    stringSeconds = ""
-    if seconds < 10:
-        stringSeconds = "0" + str(seconds)
-    else:
-        stringSeconds = str(seconds)
-    stringSeconds += "s"
-
-    stringDisplay = ""
-
-    if weeks > 0:
-        stringDisplay += stringWeeks + stringDays + stringHours + stringMinutes + stringSeconds
-    elif days > 0:
-        stringDisplay += stringDays + stringHours + stringMinutes + stringSeconds
-    elif hours > 0:
-        stringDisplay += stringHours + stringMinutes + stringSeconds
-    elif minutes > 0:
-        stringDisplay += stringMinutes + stringSeconds
-    else:
-        stringDisplay += stringSeconds
-
-    return stringDisplay
+    seconds = instanceAge
+    days, rem = divmod(seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if seconds < 1:
+        seconds = 1
+    locals_ = locals()
+    magnitudes_str = ("{n} {magnitude}".format(n=int(locals_[magnitude]), magnitude=magnitude)
+                      for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
+    eta_str = ", ".join(magnitudes_str)
+    return eta_str
 
 def eightBall():
     x = random.randint(0, 15)
