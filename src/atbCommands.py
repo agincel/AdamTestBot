@@ -66,6 +66,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         sendText("Adam has enabled me.")
                     elif messageText.lower().split()[1] == "sendto":
                         atbSendFunctions.sendText(bot, int(messageText.lower().split()[2]), messageText[15 + len(messageText.split()[2]):])
+                    elif messageText.lower().split()[1] == "blaze":
+                        bot.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
                 except Exception:
                     pass
 

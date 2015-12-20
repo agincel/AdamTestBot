@@ -90,6 +90,7 @@ while running:
         if currentTime.hour == 16 and currentTime.minute == 21: #commit Blaze Database
             builtins.blazeDB.commit()
             atb.sendMessage(chat_id=-12788453, text="Successfully committed Blaze database.")
+            atb.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
 
     previousTime = currentTime
 
