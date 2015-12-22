@@ -129,19 +129,24 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 userWasFound = False
                 valueSuccessfullyChanged = False
 
+                try:
+                    pointsAdded = int(currentMessage.text.lower().split()[1])
+                except (IndexError, ValueError):
+                    pointsAdded = 1
+
                 for user in db:
                     if int(user['username']) == currentMessage.reply_to_message.from_user.id:
-                        db.update(user, counter=int(user['counter']) + 1)
+                        db.update(user, counter=int(user['counter']) + pointsAdded)
                         valueSuccessfullyChanged = True
                         userWasFound = True
                 db.commit()
 
                 if not userWasFound:
-                    db.insert(currentMessage.reply_to_message.from_user.id, currentMessage.reply_to_message.from_user.first_name, 1)
+                    db.insert(currentMessage.reply_to_message.from_user.id, currentMessage.reply_to_message.from_user.first_name, pointsAdded)
                     db.commit()
 
                 if valueSuccessfullyChanged or not userWasFound:
-                    sendText("Matt Gomez awarded a scrub point to " + currentMessage.reply_to_message.from_user.first_name + ".")
+                    sendText("Matt Gomez awarded " + str(pointsAdded) + " scrub point(s) to " + currentMessage.reply_to_message.from_user.first_name + ".")
 
             elif not checkingStats:
                 sendText("AdamTestBot, powered by ScrubSoft (C)")
