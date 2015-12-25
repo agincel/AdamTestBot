@@ -215,8 +215,8 @@ def blaze(currentMessage):
 
     time_received = currentMessage.date
 
-    start2 = datetime.time(1, 20)
-    end2 = datetime.time(5, 20)
+    start2 = datetime.time(16, 20)
+    end2 = datetime.time(16, 20)
 
     if start <= datetime.time(time_received.hour, time_received.minute) <= end: #4:20 AM
         return blazeAM(time_received, currentMessage)
