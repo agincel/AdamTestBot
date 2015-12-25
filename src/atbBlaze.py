@@ -39,23 +39,23 @@ def blazestats(currentMessage):
 
 
 def blazeAM(currentMessage):
-	pass
+    pass
 
 def blaze(currentMessage):
-	return "Blaze 2.0 - coming Soon(tm)!"
+    return "Blaze 2.0 - coming Soon(tm)!"
     extraParam = False
     try:
         if currentMessage.text.lower().split()[1] == "stats":
-        	return blazestats(currentMessage)
+            return blazestats(currentMessage)
         elif currentMessage.text.lower().split()[1] == "halloffame":
-        	return "BLAZE HALL OF FAME\nRachel Gentile - December 24th 2015 - 420 JOINTS"
+            return "BLAZE HALL OF FAME\nRachel Gentile - December 24th 2015 - 420 JOINTS"
         elif currentMessage.text.lower().split()[1] == "info":
-        	returningString = "/blaze at 4:20 PM yields from 1 to 4 points. At 0 seconds it is worth 4 points and that value goes down every 15 seconds.\n"
-        	returningString += "\n/blaze at 4:20 AM yields from 1 to 2 points. At 0 seconds it is worth 2 points and that value goes down every 30 seconds.\n"
-        	returningString += "\nStreaks reward bonus points per day, starting at +1 for every blaze after a 3 day streak, then +1 again every 5 new days of a streak (so 3, 8, 13, etc)\n"
-    		returningString += "\nThe first three people to PM blaze will get an extra +1 on top of everything else.\n"
-    		returningString += "\n(the AM blaze has no effect on streaks, positive or negative.)"
-    		return returningString
+            returningString = "/blaze at 4:20 PM yields from 1 to 4 points. At 0 seconds it is worth 4 points and that value goes down every 15 seconds.\n"
+            returningString += "\n/blaze at 4:20 AM yields from 1 to 2 points. At 0 seconds it is worth 2 points and that value goes down every 30 seconds.\n"
+            returningString += "\nStreaks reward bonus points per day, starting at +1 for every blaze after a 3 day streak, then +1 again every 5 new days of a streak (so 3, 8, 13, etc)\n"
+            returningString += "\nThe first three people to PM blaze will get an extra +1 on top of everything else.\n"
+            returningString += "\n(the AM blaze has no effect on streaks, positive or negative.)"
+            return returningString
     except IndexError:
         extraParam = True
 
