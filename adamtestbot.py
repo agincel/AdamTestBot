@@ -51,8 +51,18 @@ instanceAge = 0
 refreshRate = 0.1
 user_id = 0
 
+#persistent blaze information 
+
 builtins.blazeDB = Base('chatStorage/blaze.pdl') #The path to the database
 builtins.blazeDB.create('username', 'name', 'counter', 'timestamp', mode="open") #Create a new DB if one doesn't exist. If it does, open it
+
+
+
+
+
+#END persistent blaze information
+
+
 
 blacklist = [-23535579, -28477145]
 
