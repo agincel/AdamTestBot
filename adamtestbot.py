@@ -15,6 +15,7 @@ import builtins #I'm so sorry
 from pydblite import Base #The PyDbLite stuff
 
 import src.atbCommands as atbCommands
+from src.atbCommands import atbBlaze
 
 APIKEY = ''
 with open('../apikey.csv', 'r+') as csvfile: #apikey is not stored on git, sorry
@@ -54,11 +55,10 @@ user_id = 0
 #persistent blaze information 
 
 builtins.blazeDB = Base('chatStorage/blaze.pdl') #The path to the database
-builtins.blazeDB.create('username', 'name', 'counter', 'timestamp', mode="open") #Create a new DB if one doesn't exist. If it does, open it
+builtins.blazeDB.create('id', 'name', 'score', 'AMtimestamp', 'PMtimestamp', 'streak', 'penalty', 'topThree', mode="open") #Create a new DB if one doesn't exist. If it does, open it
 
-
-
-
+builtins.blazeNum = 0
+builtins.groupsBlazed = ""
 
 #END persistent blaze information
 
@@ -97,6 +97,10 @@ while running:
     currentTime = datetime.datetime.now().time()
 
     if previousTime.minute != currentTime.minute:
+        if currentTime.hour == 16 and currentTime.minute == 19: #reset for PM blaze
+            builtins.blazeDB.commit()
+            builtins.blazeNum = 0
+            builtins.groupsBlazed = ""
         if currentTime.hour == 16 and currentTime.minute == 21: #commit Blaze Database
             builtins.blazeDB.commit()
             atb.sendMessage(chat_id=-12788453, text="Successfully committed Blaze database.")

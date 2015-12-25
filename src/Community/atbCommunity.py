@@ -11,7 +11,6 @@ import re
 import json
 import traceback
 import os
-import psutil
 import telegram
 
 from .. import atbSendFunctions as atbSendFunctions
@@ -90,14 +89,35 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         elif parsedCommand == "/rip":   #sends "I can't believe that [name (defaults to sender's name)] is fucking dead."
             if passSpamCheck():
                 response = "I can't believe that "
+
+                while "my " in messageText:
+                    messageText = messageText.replace(" my ", currentMessage.from_user.first_name + "\'s ", 1)
+
                 if len(messageText) > len("/rip "):
-                    if (messageText[len("/rip "):] == "me"):
+                    if messageText[len("/rip "):] == "me":
                         response += currentMessage.from_user.first_name
                     else:
                         response += messageText[len("/rip "):]
                 else:
                     response += currentMessage.from_user.first_name
                 response += " is fucking dead."
+                sendText(response)
+
+        elif parsedCommand == "/rips":   #sends "I can't believe that [name (defaults to sender's name)] is fucking dead."
+            if passSpamCheck():
+                response = "I can't believe that "
+
+                while "my " in messageText:
+                    messageText = messageText.replace(" my ", currentMessage.from_user.first_name + "\'s ", 1)
+
+                if len(messageText) > len("/rip "):
+                    if messageText[len("/rip "):] == "me":
+                        response += currentMessage.from_user.first_name
+                    else:
+                        response += messageText[len("/rip "):]
+                else:
+                    response += currentMessage.from_user.first_name
+                response += " are fucking dead."
                 sendText(response)
 
         elif parsedCommand == "/scrub":
@@ -200,6 +220,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     sendSticker("water.webp")
                 else:
                     sendSticker("hoboken_water.webp")
+
         elif parsedCommand == "/sysinfo":
             if passSpamCheck():
                 cpu = []
@@ -209,6 +230,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 memuse = psutil.virtual_memory()[2]
                 diskuse = psutil.disk_usage('/')[3]
                 sendText("The CPU uasge is " + str(cpuavg) + "%, the memory usage is " + str(memuse) + "%, and " + str(diskuse) + "% of the disk has been used.")
+
         elif parsedCommand == "/grill":
             if passSpamCheck():
                 sendPhoto("grill.jpg")
@@ -220,7 +242,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/worms - can I borrow them?\n"
             response += "/shh(h) - here, be relaxed\n"
             response += "/father - are you the father?\n"
-            response += "/rip (something) - I can't believe they're dead!\n"
+            response += "/rip(s) (something) - I can't believe they're dead! (The s is for plural dead things)\n"
             response += "/hiss stats - see how many time Robyn has hissed at people\n"
             response += "/scrub or /scrub stats - see who sponsors me or how many times Matt Gomez has called you a scrub\n"
             response += "/water - does this water look brown to you?\n"
