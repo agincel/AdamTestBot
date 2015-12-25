@@ -128,7 +128,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 sendText("right now you can order this awesome pay per view event for just $59.99")
 
         elif parsedCommand == "/blaze":
-            sendText(atbMiscFunctions.blaze(currentMessage))
+            sendText(atbBlaze.blaze(currentMessage))
 
         elif parsedCommand == "/blazecommit" and currentMessage.from_user.id == 44961843:
             builtins.blazeDB.commit()
