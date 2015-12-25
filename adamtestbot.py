@@ -10,6 +10,7 @@ import traceback
 import os
 import telegram
 import gc
+from threading import Thread
 
 import builtins #I'm so sorry
 from pydblite import Base #The PyDbLite stuff
@@ -27,7 +28,7 @@ atb = telegram.Bot(token=APIKEY)
 updates = {}
 currentMessage = {}
 
-print("@AdamTestBot 3.0 - Ready to go!")
+print("@AdamTestBot 3.5 - Ready to go!")
 print("Written by Adam Gincel, rewritten by Matt Gomez, shoutouts to Smesh, KARMAT, Dank Meme Network, and SG(DC)^2")
 
 newestOffset = 0
@@ -49,10 +50,9 @@ previousTime = datetime.datetime.now().time()
 currentTime = 0
 
 instanceAge = 0
-refreshRate = 0.1
 user_id = 0
 
-#persistent blaze information 
+# persistent blaze information
 
 builtins.blazeDB = Base('chatStorage/blaze.pdl') #The path to the database
 builtins.blazeDB.create('id', 'name', 'score', 'AMtimestamp', 'PMtimestamp', 'streak', 'penalty', 'topThree', mode="open") #Create a new DB if one doesn't exist. If it does, open it
@@ -60,9 +60,7 @@ builtins.blazeDB.create('id', 'name', 'score', 'AMtimestamp', 'PMtimestamp', 'st
 builtins.blazeNum = 0
 builtins.groupsBlazed = ""
 
-#END persistent blaze information
-
-
+# END persistent blaze information
 
 blacklist = [-23535579, -28477145]
 
@@ -89,7 +87,8 @@ while running:
             user_id = currentMessage.chat.id
             if user_id not in blacklist:
                 parsedCommand = re.split(r'[@\s:,\'*]', currentMessage.text.lower())[0]
-                running = atbCommands.process(atb, user_id, parsedCommand, currentMessage.text, currentMessage, u, datetime.datetime.now() - startTime)
+                running = Thread(target=atbCommands.process, args=(atb, user_id, parsedCommand, currentMessage.text, currentMessage, u, datetime.datetime.now() - startTime))
+                running.start()
 
         except Exception as myException:
             print(traceback.format_exc())
@@ -101,7 +100,7 @@ while running:
             builtins.blazeDB.commit()
             builtins.blazeNum = 0
             builtins.groupsBlazed = ""
-        if currentTime.hour == 16 and currentTime.minute == 21: #commit Blaze Database
+        if (currentTime.hour == 16 and currentTime.minute == 21) or (currentTime.hour == 4 and currentTime.minute == 21): #commit Blaze Database
             builtins.blazeDB.commit()
             atb.sendMessage(chat_id=-12788453, text="Successfully committed Blaze database.")
             atb.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
@@ -110,4 +109,3 @@ while running:
 
     gc.collect()
     instanceAge += 1
-    time.sleep(refreshRate)
