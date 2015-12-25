@@ -3,5 +3,5 @@ src/Community/__pycache__/
 telegram/__pycache__/
 telegram/utils/__pycache__/
 pydblite/utils/__pycache__/
-
+chatStorage/blaze.pdl
 *.pyc
