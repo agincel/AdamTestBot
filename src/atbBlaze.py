@@ -44,7 +44,6 @@ def blazestats(date):
             outputString += " (" + str(user['streak']) + ")"
 
         outputString += " " + user["name"].upper() + ": " + str(user["score"]) + pluralString
-        
 
     return outputString
 
@@ -81,7 +80,6 @@ def blazeAM(time_received, currentMessage):
 
                 valueSuccessfullyChanged = True
             userWasFound = True
-
 
     if not userWasFound:
         userName = currentMessage.from_user.first_name
@@ -138,17 +136,16 @@ def blazePM(time_received, currentMessage):
                     builtins.blazeDB.update(user, streak=user['streak'] + 1) #one more day of streak
                     currentStreak = user['streak']
                 else: # streak is broken
-                    builtins,blazeDB.update(user, streak=1)
+                    builtins.blazeDB.update(user, streak=1)
                     currentStreak = 0
 
                 if currentStreak >= 3:
                     currentStreak -= 3
                     pointsReceivedFromStreak += 1
 
-                pointsReceivedFromStreak += int(currentStreak/5) #every 5 days past 3, add one
+                pointsReceivedFromStreak += int(currentStreak / 5) #every 5 days past 3, add one
                 currentStreak += 3
                 #END handle streaks#
-
 
                 builtins.blazeDB.update(user, score=int(user['score']) + pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree)
                 builtins.blazeDB.update(user, PMtimestamp=int(time.mktime(currentMessage.date.timetuple())))
@@ -220,7 +217,7 @@ def blaze(currentMessage):
 
     if start <= datetime.time(time_received.hour, time_received.minute) <= end: #4:20 AM
         return blazeAM(time_received, currentMessage)
-    
+
     elif (start2 <= datetime.time(time_received.hour, time_received.minute) <= end2): #4:20 PM
         return blazePM(time_received, currentMessage)
     else:
