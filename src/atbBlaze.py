@@ -164,6 +164,10 @@ def blazePM(time_received, currentMessage):
             userName += userLastInitial
         except:
             pass
+        builtins.blazeList.append(currentMessage.from_user.id)
+        if currentMessage.from_user.id in builtins.blazeList[0:2]: #if is in first three
+            topThree = True
+            pointsReceivedFromTopThree = 1
 
         builtins.blazeDB.insert(currentMessage.from_user.id, userName, pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree, 0, int(time.mktime(currentMessage.date.timetuple())), 1, 0, topThree)
         userPoints = pointsReceived + pointsReceivedFromTopThree + pointsReceivedFromStreak
