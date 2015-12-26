@@ -118,7 +118,7 @@ def blazePM(time_received, currentMessage):
             if time.mktime(time_received.timetuple()) - 60 > int(user['PMtimestamp']): #not twice in one minute
                 #handle top three#
                 builtins.blazeList.append(currentMessage.from_user.id)
-                if currentMessage.from_user.id in builtins.blazeList[0:2]: #if is in first three
+                if currentMessage.from_user.id in builtins.blazeList[0:3]: #if is in first three
                     topThree = True
                     pointsReceivedFromTopThree = 1
 
@@ -165,7 +165,7 @@ def blazePM(time_received, currentMessage):
         except:
             pass
         builtins.blazeList.append(currentMessage.from_user.id)
-        if currentMessage.from_user.id in builtins.blazeList[0:2]: #if is in first three
+        if currentMessage.from_user.id in builtins.blazeList[0:3]: #if is in first three
             topThree = True
             pointsReceivedFromTopThree = 1
 
