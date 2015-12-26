@@ -57,7 +57,7 @@ user_id = 0
 builtins.blazeDB = Base('chatStorage/blaze.pdl') #The path to the database
 builtins.blazeDB.create('id', 'name', 'score', 'AMtimestamp', 'PMtimestamp', 'streak', 'penalty', 'topThree', mode="open") #Create a new DB if one doesn't exist. If it does, open it
 
-builtins.blazeNum = 0
+builtins.blazeList = list()
 builtins.groupsBlazed = ""
 
 # END persistent blaze information
@@ -98,7 +98,7 @@ while running:
     if previousTime.minute != currentTime.minute:
         if currentTime.hour == 16 and currentTime.minute == 19: #reset for PM blaze
             builtins.blazeDB.commit()
-            builtins.blazeNum = 0
+            builtins.blazeList = list()
             builtins.groupsBlazed = ""
         if (currentTime.hour == 16 and currentTime.minute == 21) or (currentTime.hour == 4 and currentTime.minute == 21): #commit Blaze Database
             builtins.blazeDB.commit()
