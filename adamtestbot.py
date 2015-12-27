@@ -105,6 +105,8 @@ while running:
             atb.sendMessage(chat_id=-12788453, text="Successfully committed Blaze database.")
             atb.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
             if currentTime.hour == 16 and currentTime.minute == 21:
+                s = set(builtins.groupsBlazed)
+                builtins.groupsBlazed = list(s)
                 for group in builtins.groupsBlazed:
                     atb.sendMessage(int(group), atbBlaze.blazesummary(datetime.datetime.now()))
 
