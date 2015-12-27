@@ -47,6 +47,31 @@ def blazestats(date):
 
     return outputString
 
+def blazesummary(date):
+    outputString = "THESE PEOPLE BLAZED IT TODAY:\n"
+    sortedK = sorted(list(builtins.blazeDB), key=lambda x: int(x['score']), reverse=True)
+    for user in sortedK:
+        if (int(user['AMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple())) or (int(user['PMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple())):
+            pluralString = " POINT"
+            if not(int(user["score"]) == 1):
+                pluralString += "S"
+            pluralString += "\n"
+
+            if user['topThree']:
+                outputString += "+"
+
+            if int(user['AMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple()):
+                outputString += "&"
+
+            if int(user['PMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple()):
+                outputString += "*"
+
+            if user['streak'] > 1:
+                outputString += " (" + str(user['streak']) + ")"
+
+            outputString += " " + user["name"].upper() + ": " + str(user["score"]) + pluralString
+    return outputString
+
 def blazePenalty(sender):
     for user in builtins.blazeDB:
         if user is not None and sender.id == int(user['id']):
@@ -187,7 +212,7 @@ def blazePM(time_received, currentMessage):
         returningString += "THEY NOW HAVE " + str(userPoints) + pluralString
 
         if str(currentMessage.chat.id) not in builtins.groupsBlazed:
-            builtins.groupsBlazed += str(currentMessage.chat.id) + " "
+            builtins.groupsBlazed.append(currentMessage.chat.id)
 
         return returningString
     else:
