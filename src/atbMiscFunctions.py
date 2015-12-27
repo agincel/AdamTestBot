@@ -191,7 +191,7 @@ def ageCommand(instanceAge):
         seconds = 1
     locals_ = locals()
     magnitudes_str = ("{n} {magnitude}".format(n=int(locals_[magnitude]), magnitude=magnitude)
-                      for magnitude in ("day(s)", "hour(s)", "minute(s)", "second(s)") if locals_[magnitude])
+                      for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
     eta_str = ", ".join(magnitudes_str)
     return eta_str
 
@@ -289,82 +289,6 @@ def pickResponse(messageText):
     else:
         answerIndex = random.randint(0, len(wholeTextArray) - 1)
         return wholeTextArray[answerIndex]
-
-def blaze(currentMessage):
-    checkingStats = False
-    try:
-        if currentMessage.text.lower().split()[1] == "stats":
-            #db = Base('chatStorage/blaze.pdl') #The path to the database
-            #db.create('username', 'name', 'counter', 'timestamp', mode="open") #Create a new DB if one doesn't exist. If it does, open it
-            outputString = "JOINTS BLAZED:\n"
-            K = list()
-            for user in builtins.blazeDB:
-                K.append(user)
-            sortedK = sorted(K, key=lambda x: int(x['counter']), reverse=True)
-            for user in sortedK:
-                pluralString = " JOINT"
-                if not(int(user["counter"]) == 1):
-                    pluralString += "S"
-                pluralString += "\n"
-
-                if int(user['timestamp']) + (24 * 3600) - 60 > time.mktime(currentMessage.date.timetuple()):
-                    outputString += "*"
-                outputString += user["name"].upper() + ": " + str(user["counter"]) + pluralString
-
-            return outputString
-            checkingStats = True
-    except IndexError:
-        pass
-
-    start = datetime.time(4, 20)
-    end = datetime.time(4, 20)
-    time_received = currentMessage.date
-    print(start)
-    print(time_received)
-
-    start2 = datetime.time(16, 20)
-    end2 = datetime.time(16, 20)
-
-    if start <= datetime.time(time_received.hour, time_received.minute) <= end: #4:20 AM
-        if not checkingStats:
-            return currentMessage.from_user.first_name + ", I know you like staying up late, but you really need to puff puff pass out."
-    elif (start2 <= datetime.time(time_received.hour, time_received.minute) <= end2) and not checkingStats:
-        pointsReceived = 4 - int(time_received.second / 15)
-        print("DEBUG TIME: PointsReceived=" + str(pointsReceived))
-
-        #db = Base('chatStorage/blaze.pdl') #The path to the database
-        #db.create('username', 'name', 'counter', 'timestamp', mode="open") #Create a new DB if one doesn't exist. If it does, open it
-
-        userWasFound = False
-        valueSuccessfullyChanged = False
-        userPoints = 0
-
-        for user in builtins.blazeDB:
-            # print user['username']
-            if int(user['username']) == currentMessage.from_user.id:
-                if time.mktime(currentMessage.date.timetuple()) - 60 > int(user['timestamp']):
-                    builtins.blazeDB.update(user, counter=int(user['counter']) + pointsReceived)
-                    userPoints = user['counter']
-                    builtins.blazeDB.update(user, timestamp=int(time.mktime(currentMessage.date.timetuple())))
-                    valueSuccessfullyChanged = True
-                    print("Found user!\n")
-                userWasFound = True
-
-        if not userWasFound:
-            builtins.blazeDB.insert(currentMessage.from_user.id, currentMessage.from_user.first_name, pointsReceived, int(time.mktime(currentMessage.date.timetuple())))
-            userPoints = pointsReceived
-
-        if valueSuccessfullyChanged or not userWasFound:
-            pluralString = " JOINT"
-            if pointsReceived > 1:
-                pluralString = pluralString + "S"
-            #db.commit() #Write the in memory DB changes to disk
-            return currentMessage.from_user.first_name.upper() + " 420 BLAZED IT AT " + str(time_received.second).upper() + " SECONDS. THEY BLAZED " + str(pointsReceived) + pluralString + " AND HAVE NOW SMOKED " + str(userPoints) + " IN TOTAL."
-        else:
-            return currentMessage.from_user.first_name + " is getting a bit too eager to blaze it."
-    else:
-        if not checkingStats:
-            return currentMessage.from_user.first_name + " failed to blaze."
 
 def first_vowel(s):
     if s[0].lower() != "y":

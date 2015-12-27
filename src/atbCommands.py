@@ -15,6 +15,7 @@ from . import atbSendFunctions
 from . import atbMiscFunctions
 from . import atbAdLib
 from . import atbLikes
+from . import atbBlaze
 from .Community import atbCommunity as atbCommunity
 
 from pydblite import Base #The PyDbLite stuff
@@ -66,6 +67,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         sendText("Adam has enabled me.")
                     elif messageText.lower().split()[1] == "sendto":
                         atbSendFunctions.sendText(bot, int(messageText.lower().split()[2]), messageText[15 + len(messageText.split()[2]):])
+                    elif messageText.lower().split()[1] == "blaze":
+                        bot.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
                 except Exception:
                     pass
 
@@ -125,7 +128,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 sendText("right now you can order this awesome pay per view event for just $59.99")
 
         elif parsedCommand == "/blaze":
-            sendText(atbMiscFunctions.blaze(currentMessage))
+            sendText(atbBlaze.blaze(currentMessage))
 
         elif parsedCommand == "/blazecommit" and currentMessage.from_user.id == 44961843:
             builtins.blazeDB.commit()
