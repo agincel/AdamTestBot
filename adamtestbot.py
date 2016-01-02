@@ -87,8 +87,7 @@ while running:
             user_id = currentMessage.chat.id
             if user_id not in blacklist:
                 parsedCommand = re.split(r'[@\s:,\'*]', currentMessage.text.lower())[0]
-                running = Thread(target=atbCommands.process, args=(atb, user_id, parsedCommand, currentMessage.text, currentMessage, u, datetime.datetime.now() - startTime))
-                running.start()
+                atbCommands.process(atb, user_id, parsedCommand, currentMessage.text, currentMessage, u, datetime.datetime.now() - startTime)
 
         except Exception as myException:
             print(traceback.format_exc())
