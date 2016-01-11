@@ -48,7 +48,7 @@ def blazestats(date):
     return outputString
 
 def blazesummary(date):
-    outputString = "THESE PEOPLE BLAZED IT TODAY:\n"
+    outputString = "Today's Blaze Summary:\n"
     sortedK = sorted(list(builtins.blazeDB), key=lambda x: int(x['score']), reverse=True)
     for user in sortedK:
         if (int(user['AMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple())) or (int(user['PMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple())):
@@ -63,13 +63,12 @@ def blazesummary(date):
             if int(user['AMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple()):
                 outputString += "&"
 
-            if int(user['PMtimestamp']) + (24 * 3600) - 60 > time.mktime(date.timetuple()):
-                outputString += "*"
-
             if user['streak'] > 1:
                 outputString += " (" + str(user['streak']) + ")"
 
             outputString += " " + user["name"].upper() + ": " + str(user["score"]) + pluralString
+    if builtins.blazeMessage != "":
+        outputString += "\n\n" + builtins.blazeMessage
     return outputString
 
 def blazePenalty(sender):
@@ -207,7 +206,7 @@ def blazePM(time_received, currentMessage):
         if pointsReceivedFromStreak > 0:
             returningString += str(currentStreak) + " DAY STREAK: +" + str(pointsReceivedFromStreak) + "\n"
         if pointsReceivedFromTopThree > 0:
-            returningString += "TOP THREE! +1\n"
+            returningString += "FIRST THREE! +1\n"
         returningString += "= +" + str(pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree) + "\n"
         returningString += "THEY NOW HAVE " + str(userPoints) + pluralString
 
@@ -223,6 +222,8 @@ def blaze(currentMessage):
     try:
         if currentMessage.text.lower().split()[1] == "stats":
             return blazestats(currentMessage.date)
+        elif currentMessage.text.lower().split()[1] == "time":
+            return "I'm at " + str(datetime.datetime.now().time().second) + " seconds."
         elif currentMessage.text.lower().split()[1] == "halloffame" or currentMessage.text.lower().split()[1] == "hall":
             return "BLAZE HALL OF FAME\nRachel Gentile - 12/24/2015 | 420 JOINTS"
         elif currentMessage.text.lower().split()[1] == "info":
@@ -253,4 +254,4 @@ def blaze(currentMessage):
         if not extraParam:
             return blazePenalty(currentMessage.from_user)
 
-    return "I have no idea how you got here."
+    return "Invalid command."

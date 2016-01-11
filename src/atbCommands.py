@@ -127,6 +127,10 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 sendText("ARE YOU READY FOR THIS SUNDAY NIGHT WHEN WWE CHAMP JOHN CENA DEFENDS HIS TITLE IN THE WWE SUUUUUUPERSLAMMMMMMM")
                 sendText("right now you can order this awesome pay per view event for just $59.99")
 
+        elif parsedCommand == "/message" and currentMessage.from_user.id == 44961843:
+            builtins.blazeMessage = messageText[len("/message "):]
+            sendText("Message received.")
+
         elif parsedCommand == "/blaze":
             sendText(atbBlaze.blaze(currentMessage))
 

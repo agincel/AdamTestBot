@@ -59,6 +59,7 @@ builtins.blazeDB.create('id', 'name', 'score', 'AMtimestamp', 'PMtimestamp', 'st
 
 builtins.blazeList = list()
 builtins.groupsBlazed = list()
+builtins.blazeMessage = ""
 
 # END persistent blaze information
 
@@ -96,12 +97,15 @@ while running:
 
     if previousTime.minute != currentTime.minute:
         if currentTime.hour == 16 and currentTime.minute == 19: #reset for PM blaze
+            K = list()
+            for user in builtins.blazeDB:
+                builtins.blazeDB.update(user, topThree=False)
             builtins.blazeDB.commit()
             builtins.blazeList = list()
             builtins.groupsBlazed = list()
         if (currentTime.hour == 16 and currentTime.minute == 21) or (currentTime.hour == 4 and currentTime.minute == 21): #commit Blaze Database
             builtins.blazeDB.commit()
-            atb.sendMessage(chat_id=-12788453, text="Successfully committed Blaze database.")
+            builtins.blazeMessage = ""
             atb.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
             if currentTime.hour == 16 and currentTime.minute == 21:
                 s = set(builtins.groupsBlazed)
