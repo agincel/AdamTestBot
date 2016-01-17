@@ -105,7 +105,6 @@ while running:
             builtins.groupsBlazed = list()
         if (currentTime.hour == 16 and currentTime.minute == 21) or (currentTime.hour == 4 and currentTime.minute == 21): #commit Blaze Database
             builtins.blazeDB.commit()
-            builtins.blazeMessage = ""
             atb.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
             if currentTime.hour == 16 and currentTime.minute == 21:
                 s = set(builtins.groupsBlazed)

@@ -131,6 +131,9 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             builtins.blazeMessage = messageText[len("/message "):]
             sendText("Message received.")
 
+        elif parsedCommand == "/motd":
+            sendText(builtins.blazeMessage)
+
         elif parsedCommand == "/blaze":
             sendText(atbBlaze.blaze(currentMessage))
 
