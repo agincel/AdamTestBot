@@ -136,14 +136,23 @@ def blazePM(time_received, currentMessage):
     gotStreak = False
 
     pointsReceived += 4 - int(time_received.second / 15)
-    firstRange = int(len(builtins.blazeDB)/6)
+
+    dbLen = 0
+    for user in builtins.blazeDB:
+        dbLen++
+
+
+    firstRange = int(dbLen/6)
 
     for user in builtins.blazeDB: #search for user
         if int(user['id']) == currentMessage.from_user.id: #found them
             if time.mktime(time_received.timetuple()) - 60 > int(user['PMtimestamp']): #not twice in one minute
                 #handle top three#
                 builtins.blazeList.append(currentMessage.from_user.id)
-                if currentMessage.from_user.id in builtins.blazeList[0:firstRange]: #if is in first three
+
+                upperBound = min(firstRange, len(builtins.blazeList))
+
+                if currentMessage.from_user.id in builtins.blazeList[0:upperBound]: #if is in first three
                     topThree = True
                     pointsReceivedFromTopThree = 1
 
@@ -190,7 +199,8 @@ def blazePM(time_received, currentMessage):
         except:
             pass
         builtins.blazeList.append(currentMessage.from_user.id)
-        if currentMessage.from_user.id in builtins.blazeList[0:firstRange]: #if is in first three
+        upperBound = min(firstRange, len(builtins.blazeList))
+        if currentMessage.from_user.id in builtins.blazeList[0:upperBound]: #if is in first three
             topThree = True
             pointsReceivedFromTopThree = 1
 
@@ -243,7 +253,7 @@ def blaze(currentMessage):
 
     time_received = currentMessage.date
 
-    start2 = datetime.time(16, 20)
+    start2 = datetime.time(0, 20)
     end2 = datetime.time(16, 20)
 
     if start <= datetime.time(time_received.hour, time_received.minute) <= end: #4:20 AM
