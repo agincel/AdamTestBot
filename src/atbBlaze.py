@@ -139,7 +139,7 @@ def blazePM(time_received, currentMessage):
 
     dbLen = 0
     for user in builtins.blazeDB:
-        dbLen++
+        dbLen += 1
 
 
     firstRange = int(dbLen/6)
