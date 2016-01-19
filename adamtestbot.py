@@ -51,6 +51,7 @@ currentTime = 0
 
 instanceAge = 0
 user_id = 0
+delayTime = 1
 
 # persistent blaze information
 
@@ -75,14 +76,16 @@ while running:
                 newestOffset = u.update_id
             networkFailure = False
         except Exception:
-            print("...", end=' ')
-
+            print("...")
+    print("=-.", end=' ')
     if instanceAge % 10 == 0: #print 1 X every ten ticks
         print("Y")
     else:
         print("X", end=' ')
 
+    print(".-=")
     for u in updates:
+        print(".==")
         currentMessage = u.message
         try:
             user_id = currentMessage.chat.id
@@ -116,3 +119,4 @@ while running:
 
     gc.collect()
     instanceAge += 1
+    time.sleep(delayTime)
