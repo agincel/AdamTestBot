@@ -10,6 +10,7 @@ import traceback
 import os
 import telegram
 import gc
+import signal
 from threading import Thread
 
 import builtins #I'm so sorry
@@ -35,7 +36,7 @@ newestOffset = 0
 networkFailure = True
 while networkFailure:
     try:
-        updates = atb.getUpdates(offset=newestOffset)
+        updates = atb.getUpdates(offset=newestOffset, timeout=3,network_delay=5)
         for u in updates:
             newestOffset = u.update_id
         networkFailure = False
@@ -51,7 +52,7 @@ currentTime = 0
 
 instanceAge = 0
 user_id = 0
-delayTime = 1
+delayTime = .15
 
 # persistent blaze information
 
@@ -77,15 +78,13 @@ while running:
             networkFailure = False
         except Exception:
             print("...")
-    print("=-.", end=' ')
+
     if instanceAge % 10 == 0: #print 1 X every ten ticks
         print("Y")
     else:
-        print("X", end=' ')
+        print("X", end=" ")
 
-    print(".-=")
     for u in updates:
-        print(".==")
         currentMessage = u.message
         try:
             user_id = currentMessage.chat.id
@@ -97,7 +96,6 @@ while running:
             print(traceback.format_exc())
 
     currentTime = datetime.datetime.now().time()
-
     if previousTime.minute != currentTime.minute:
         if currentTime.hour == 16 and currentTime.minute == 19: #reset for PM blaze
             K = list()
@@ -116,7 +114,6 @@ while running:
                     atb.sendMessage(int(group), atbBlaze.blazesummary(datetime.datetime.now()))
 
     previousTime = currentTime
-
     gc.collect()
     instanceAge += 1
     time.sleep(delayTime)

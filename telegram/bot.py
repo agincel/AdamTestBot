@@ -21,6 +21,7 @@
 
 import functools
 import logging
+import requests
 
 from telegram import (User, Message, Update, UserProfilePhotos, File,
                       TelegramError, ReplyMarkup, TelegramObject, NullHandler)
@@ -687,6 +688,7 @@ class Bot(TelegramObject):
             data['timeout'] = timeout
 
         result = request.post(url, data, network_delay=network_delay)
+
 
         if result:
             self.logger.info(

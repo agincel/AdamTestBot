@@ -89,7 +89,7 @@ def post(url,
     if 'timeout' in data:
         timeout = data['timeout'] + network_delay
     else:
-        timeout = None
+        timeout = 3
 
     try:
         if InputFile.is_inputfile(data):
@@ -121,6 +121,8 @@ def post(url,
             raise TelegramError("Timed out")
 
         raise TelegramError(str(error))
+    except Exception:
+        pass
     return _parse(result)
 
 
