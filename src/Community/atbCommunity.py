@@ -12,7 +12,7 @@ import json
 import traceback
 import os
 import telegram
-import psutil 
+import psutil
 
 from .. import atbSendFunctions as atbSendFunctions
 from .. import atbMiscFunctions as atbMiscFunctions
@@ -235,6 +235,19 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         elif parsedCommand == "/grill":
             if passSpamCheck():
                 sendPhoto("grill.jpg")
+
+        elif parsedCommand == "/pants":
+            if passSpamCheck():
+                sendText("Shit! I can't find my pants.")
+
+        elif parsedCommand == "/broken":
+            if passSpamCheck():
+                try:
+                    message = str(currentMessage.from_user.username) + " says: @magomez96 my " + currentMessage.text.split()[1] + " is broken!"
+                except(Exception):
+                    message = str(currentMessage.from_user.username) + " says: @magomez96 my shit is broken!"
+                sendText(message)
+
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
             response = "/mom - get the camera\n"
@@ -248,7 +261,9 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/scrub or /scrub stats - see who sponsors me or how many times Matt Gomez has called you a scrub\n"
             response += "/water - does this water look brown to you?\n"
             response += "/sysinfo - Gets server performance info.\n"
-            response += "/grill - I'm a George Foreman grill!"
+            response += "/grill - I'm a George Foreman grill!\n"
+            response += "/pants - Pants?\n"
+            response += "/broken - Tell Matt Gomez your stuff is broken."
             sendText(response)
 
         else:
