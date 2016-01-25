@@ -36,7 +36,7 @@ newestOffset = 0
 networkFailure = True
 while networkFailure:
     try:
-        updates = atb.getUpdates(offset=newestOffset, timeout=3,network_delay=5)
+        updates = atb.getUpdates(offset=newestOffset, timeout=3, network_delay=5)
         for u in updates:
             newestOffset = u.update_id
         networkFailure = False

@@ -134,7 +134,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         elif parsedCommand == "/motd":
             sendText(builtins.blazeMessage)
 
-        elif parsedCommand == "/blaze":
+        elif parsedCommand == "/blaze" and chat_id != 106128903:
             sendText(atbBlaze.blaze(currentMessage))
 
         elif parsedCommand == "/blazecommit" and currentMessage.from_user.id == 44961843:
