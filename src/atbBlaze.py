@@ -166,8 +166,7 @@ def blazePM(time_received, currentMessage):
                 if int(user['PMtimestamp']) + 86460 > time.mktime(time_received.timetuple()): #they did it a day ago, streak is on
                     gotStreak = True
 
-                gotStreak = True # TODO: REMOVE THIS, STREAKS ARE FREE FOR TODAY
-                
+                # gotStreak = True # !!!!!!!
 
                 if gotStreak:
                     builtins.blazeDB.update(user, streak=user['streak'] + 1) #one more day of streak
@@ -256,7 +255,7 @@ def blaze(currentMessage):
 
     time_received = currentMessage.date
 
-    start2 = datetime.time(0, 20)
+    start2 = datetime.time(16, 20)
     end2 = datetime.time(16, 20)
 
     if start <= datetime.time(time_received.hour, time_received.minute) <= end: #4:20 AM
