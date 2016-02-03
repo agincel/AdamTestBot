@@ -242,9 +242,9 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         elif parsedCommand == "/broken":
             if passSpamCheck():
-                try:
-                    message = str(currentMessage.from_user.username) + " says: @magomez96 my " + currentMessage.text.split()[1] + " is broken!"
-                except(Exception):
+                if len(messageText) > len("/broken "):
+                    message = str(currentMessage.from_user.username) + " says: @magomez96 my " + messageText[len("/broken "):] + " is broken!"
+                else:
                     message = str(currentMessage.from_user.username) + " says: @magomez96 my shit is broken!"
                 sendText(message)
 
