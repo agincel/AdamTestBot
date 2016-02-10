@@ -16,6 +16,7 @@ import psutil
 
 from .. import atbSendFunctions as atbSendFunctions
 from .. import atbMiscFunctions as atbMiscFunctions
+from . import atbQuote
 
 from pydblite import Base #The PyDbLite stuff
 import builtins
@@ -92,7 +93,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 response = "I can't believe that "
 
                 while "my " in messageText:
-                    messageText = messageText.replace(" my ", currentMessage.from_user.first_name + "\'s ", 1)
+                    messageText = messageText.replace("my ", currentMessage.from_user.first_name + "\'s ", 1)
 
                 if len(messageText) > len("/rip "):
                     if messageText[len("/rip "):] == "me":
@@ -109,7 +110,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 response = "I can't believe that "
 
                 while "my " in messageText:
-                    messageText = messageText.replace(" my ", currentMessage.from_user.first_name + "\'s ", 1)
+                    messageText = messageText.replace("my ", currentMessage.from_user.first_name + "\'s ", 1)
 
                 if len(messageText) > len("/rip "):
                     if messageText[len("/rip "):] == "me":
@@ -242,11 +243,26 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         elif parsedCommand == "/broken":
             if passSpamCheck():
-                if len(messageText) > len("/broken "):
-                    message = str(currentMessage.from_user.username) + " says: @magomez96 my " + messageText[len("/broken "):] + " is broken!"
-                else:
+                try:
+                    message = str(currentMessage.from_user.username) + " says: @magomez96 my " + currentMessage.text.split()[1] + " is broken!"
+                except(Exception):
                     message = str(currentMessage.from_user.username) + " says: @magomez96 my shit is broken!"
                 sendText(message)
+
+        elif parsedCommand == "/quote":
+            if passSpamCheck():
+                sendText(atbQuote.getQuote(chat_id))
+
+        elif parsedCommand == "/quoteadd":
+            try:
+                userLastInitial = ''
+                try:
+                    userLastInitial = " " + currentMessage.reply_to_message.from_user.last_name[0].upper() + "."
+                except:
+                    pass
+                atbQuote.quoteAdd(chat_id, '/quoteadd "' + currentMessage.reply_to_message.text + '" - ' + currentMessage.reply_to_message.from_user.first_name + userLastInitial)
+            except(Exception):
+                atbQuote.quoteAdd(chat_id, messageText)
 
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
@@ -264,6 +280,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/grill - I'm a George Foreman grill!\n"
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken."
+            response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!"
             sendText(response)
 
         else:
