@@ -238,7 +238,7 @@ def blaze(currentMessage):
         elif currentMessage.text.lower().split()[1] == "time":
             return "I'm at " + str(datetime.datetime.now().time().second) + " seconds."
         elif currentMessage.text.lower().split()[1] == "halloffame" or currentMessage.text.lower().split()[1] == "hall":
-            return "BLAZE HALL OF FAME\nRachel Gentile - 12/24/2015 | 420 JOINTS"
+            return "BLAZE HALL OF FAME\nRachel Gentile - 12/24/2015 | 420 JOINTS\nAlex Bicica - 2/17/2016 | 420 Points"
         elif currentMessage.text.lower().split()[1] == "info":
             returningString = "/blaze at 4:20 PM yields from 1 to 4 points. At 0 seconds it is worth 4 points and that value goes down every 15 seconds.\n"
             returningString += "\n/blaze at 4:20 AM yields from 1 to 2 points. At 0 seconds it is worth 2 points and that value goes down every 30 seconds.\n"
