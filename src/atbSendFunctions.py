@@ -1,12 +1,18 @@
 import telegram
 
 
-def sendText(bot, chat_id, messageText, replyingMessageID=0, keyboardLayout=[], killkeyboard=True):
+def sendText(bot, chat_id, messageText, replyingMessageID=0, keyboardLayout=[], killkeyboard=True, markdown=False):
     bot.sendChatAction(chat_id=chat_id, action='typing')
-    try:
-        print(messageText + " at " + str(chat_id))
-    except Exception:
-        print("Sent something with weird characters to " + str(chat_id))
+    for char in messageText:
+        try:
+            print(char, end='')
+        except:
+            print("_", end='')
+    print(" at " + str(chat_id))
+    #try:
+    #    print(messageText.encode("utf-8") + " at " + str(chat_id))
+    #except Exception:
+    #    print("Sent something with weird characters to " + str(chat_id))
 
     if replyingMessageID != 0:
         bot.sendMessage(chat_id=chat_id, text=messageText, reply_to_message_id=replyingMessageID, reply_markup=telegram.ReplyKeyboardHide(hide_keyboard=killkeyboard))
@@ -14,7 +20,10 @@ def sendText(bot, chat_id, messageText, replyingMessageID=0, keyboardLayout=[], 
         print("tried sending keyboard")
         bot.sendMessage(chat_id=chat_id, text=messageText, reply_markup=telegram.ReplyKeyboardMarkup(keyboard=keyboardLayout, one_time_keyboard=True, resize_keyboard=True))
     else:
-        bot.sendMessage(chat_id=chat_id, text=messageText, reply_markup=telegram.ReplyKeyboardHide(hide_keyboard=killkeyboard))
+        if markdown:
+            bot.sendMessage(chat_id=chat_id, text=messageText, parse_mode="Markdown", reply_markup=telegram.ReplyKeyboardHide(hide_keyboard=killkeyboard))
+        else:
+            bot.sendMessage(chat_id=chat_id, text=messageText, reply_markup=telegram.ReplyKeyboardHide(hide_keyboard=killkeyboard))
 
 def sendPhoto(bot, chat_id, imagePath):
     bot.sendChatAction(chat_id=chat_id, action='upload_photo')

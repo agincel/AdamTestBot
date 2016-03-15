@@ -2,7 +2,8 @@
 # pylint: disable=E0611,E0213,E1102,C0103,E1101,W0613,R0913,R0904
 #
 # A library that provides a Python interface to the Telegram Bot API
-# Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser Public License as published by
@@ -17,15 +18,16 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""This module contains a object that represents a Telegram Bot"""
+"""This module contains a object that represents a Telegram Bot."""
 
 import functools
 import logging
-import requests
 
 from telegram import (User, Message, Update, UserProfilePhotos, File,
                       TelegramError, ReplyMarkup, TelegramObject, NullHandler)
+from telegram.error import InvalidToken
 from telegram.utils import request
+from telegram.utils.validate import validate_string
 
 H = NullHandler()
 logging.getLogger(__name__).addHandler(H)
@@ -53,7 +55,7 @@ class Bot(TelegramObject):
     def __init__(self,
                  token,
                  base_url=None):
-        self.token = token
+        self.token = self._valid_token(token)
 
         if base_url is None:
             self.base_url = 'https://api.telegram.org/bot%s' % self.token
@@ -141,28 +143,42 @@ class Bot(TelegramObject):
             decorator
             """
             url, data = func(self, *args, **kwargs)
-
-            if not data.get('chat_id'):
-                raise TelegramError('Invalid chat_id')
-
-            if kwargs.get('reply_to_message_id'):
-                reply_to_message_id = kwargs.get('reply_to_message_id')
-                data['reply_to_message_id'] = reply_to_message_id
-
-            if kwargs.get('reply_markup'):
-                reply_markup = kwargs.get('reply_markup')
-                if isinstance(reply_markup, ReplyMarkup):
-                    data['reply_markup'] = reply_markup.to_json()
-                else:
-                    data['reply_markup'] = reply_markup
-
-            result = request.post(url, data)
-
-            if result is True:
-                return result
-
-            return Message.de_json(result)
+            return Bot._post_message(url, data, kwargs)
         return decorator
+
+    @staticmethod
+    def _post_message(url, data, kwargs, timeout=None, network_delay=2.):
+        """Posts a message to the telegram servers.
+
+        Returns:
+            telegram.Message
+
+        """
+        if not data.get('chat_id'):
+            raise TelegramError('Invalid chat_id')
+
+        if kwargs.get('reply_to_message_id'):
+            reply_to_message_id = kwargs.get('reply_to_message_id')
+            data['reply_to_message_id'] = reply_to_message_id
+
+        if kwargs.get('disable_notification'):
+            disable_notification = kwargs.get('disable_notification')
+            data['disable_notification'] = disable_notification
+
+        if kwargs.get('reply_markup'):
+            reply_markup = kwargs.get('reply_markup')
+            if isinstance(reply_markup, ReplyMarkup):
+                data['reply_markup'] = reply_markup.to_json()
+            else:
+                data['reply_markup'] = reply_markup
+
+        result = request.post(url, data, timeout=timeout,
+                              network_delay=network_delay)
+
+        if result is True:
+            return result
+
+        return Message.de_json(result)
 
     @log
     def getMe(self):
@@ -192,16 +208,19 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - telegram.User or
-            telegram.GroupChat id.
+            Unique identifier for the message recipient - telegram.Chat id.
           parse_mode:
-            Send Markdown, if you want Telegram apps to show bold, italic and
-            inline URLs in your bot's message. For the moment, only Telegram
-            for Android supports this. [Optional]
+            Send 'Markdown', if you want Telegram apps to show bold, italic and
+            inline URLs in your bot's message. [Optional]
           text:
-            Text of the message to be sent.
+            Text of the message to be sent. The current maximum length is 4096
+            UTF8 characters.
           disable_web_page_preview:
             Disables link previews for links in this message. [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -235,12 +254,16 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           from_chat_id:
             Unique identifier for the chat where the original message was sent
-            - User or GroupChat id.
+            - Chat id.
           message_id:
             Unique message identifier.
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
 
         Returns:
           A telegram.Message instance representing the message forwarded.
@@ -269,7 +292,7 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           photo:
             Photo to send. You can either pass a file_id as String to resend a
             photo that is already on the Telegram servers, or upload a new
@@ -277,6 +300,10 @@ class Bot(TelegramObject):
           caption:
             Photo caption (may also be used when resending photos by file_id).
             [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -320,7 +347,7 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           audio:
             Audio file to send. You can either pass a file_id as String to
             resend an audio that is already on the Telegram servers, or upload
@@ -331,6 +358,10 @@ class Bot(TelegramObject):
             Performer of sent audio. [Optional]
           title:
             Title of sent audio. [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -367,7 +398,7 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           document:
             File to send. You can either pass a file_id as String to resend a
             file that is already on the Telegram servers, or upload a new file
@@ -375,6 +406,10 @@ class Bot(TelegramObject):
           filename:
             File name that shows in telegram message (it is usefull when you
             send file generated by temp module, for example). [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -406,11 +441,15 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           sticker:
             Sticker to send. You can either pass a file_id as String to resend
             a sticker that is already on the Telegram servers, or upload a new
             sticker using multipart/form-data.
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -430,19 +469,19 @@ class Bot(TelegramObject):
         return url, data
 
     @log
-    @message
     def sendVideo(self,
                   chat_id,
                   video,
                   duration=None,
                   caption=None,
+                  timeout=None,
                   **kwargs):
         """Use this method to send video files, Telegram clients support mp4
         videos (other formats may be sent as telegram.Document).
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           video:
             Video to send. You can either pass a file_id as String to resend a
             video that is already on the Telegram servers, or upload a new
@@ -452,6 +491,13 @@ class Bot(TelegramObject):
           caption:
             Video caption (may also be used when resending videos by file_id).
             [Optional]
+          timeout:
+            float. If this value is specified, use it as the definitive timeout
+            (in seconds) for urlopen() operations. [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -473,7 +519,7 @@ class Bot(TelegramObject):
         if caption:
             data['caption'] = caption
 
-        return url, data
+        return self._post_message(url, data, kwargs, timeout=timeout)
 
     @log
     @message
@@ -491,13 +537,17 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           voice:
             Audio file to send. You can either pass a file_id as String to
             resend an audio that is already on the Telegram servers, or upload
             a new audio file using multipart/form-data.
           duration:
             Duration of sent audio in seconds. [Optional]
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -530,11 +580,15 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           latitude:
             Latitude of location.
           longitude:
             Longitude of location.
+          disable_notification:
+            Sends the message silently. iOS users will not receive
+            a notification, Android users will receive a notification
+            with no sound. Other apps coming soon. [Optional]
           reply_to_message_id:
             If the message is a reply, ID of the original message. [Optional]
           reply_markup:
@@ -566,7 +620,7 @@ class Bot(TelegramObject):
 
         Args:
           chat_id:
-            Unique identifier for the message recipient - User or GroupChat id.
+            Unique identifier for the message recipient - Chat id.
           action:
             Type of action to broadcast. Choose one, depending on what the user
             is about to receive:
@@ -584,6 +638,59 @@ class Bot(TelegramObject):
                 'action': action}
 
         return url, data
+
+    @log
+    def answerInlineQuery(self,
+                          inline_query_id,
+                          results,
+                          cache_time=None,
+                          is_personal=None,
+                          next_offset=None):
+        """Use this method to reply to an inline query.
+
+        Args:
+            inline_query_id (str):
+                Unique identifier for answered query
+            results (list[InlineQueryResult]):
+                A list of results for the inline query
+
+        Keyword Args:
+            cache_time (Optional[int]): The maximum amount of time the result
+                of the inline query may be cached on the server
+            is_personal (Optional[bool]): Pass True, if results may be cached
+                on the server side only for the user that sent the query. By
+                default, results may be returned to any user who sends the same
+                query
+            next_offset (Optional[str]): Pass the offset that a client should
+                send in the next query with the same text to receive more
+                results. Pass an empty string if there are no more results or
+                if you don't support pagination. Offset length can't exceed 64
+                bytes.
+
+        Returns:
+            A boolean if answering was successful
+        """
+
+        validate_string(inline_query_id, 'inline_query_id')
+        validate_string(inline_query_id, 'next_offset')
+
+        url = '%s/answerInlineQuery' % self.base_url
+
+        results = [res.to_dict() for res in results]
+
+        data = {'inline_query_id': inline_query_id,
+                'results': results}
+
+        if cache_time is not None:
+            data['cache_time'] = int(cache_time)
+        if is_personal is not None:
+            data['is_personal'] = bool(is_personal)
+        if next_offset is not None:
+            data['next_offset'] = next_offset
+
+        result = request.post(url, data)
+
+        return result
 
     @log
     def getUserProfilePhotos(self,
@@ -689,12 +796,11 @@ class Bot(TelegramObject):
 
         result = request.post(url, data, network_delay=network_delay)
 
-
         if result:
             self.logger.info(
                 'Getting updates: %s', [u['update_id'] for u in result])
         else:
-            self.logger.info('No new updates found.')
+            self.logger.debug('No new updates found.')
 
         return [Update.de_json(x) for x in result]
 
@@ -747,3 +853,11 @@ class Bot(TelegramObject):
     def __reduce__(self):
         return (self.__class__, (self.token,
                                  self.base_url.replace(self.token, '')))
+
+    @staticmethod
+    def _valid_token(token):
+        """a very basic validation on token"""
+        left, sep, _right = token.partition(':')
+        if (not sep) or (not left.isdigit()) or (len(left) < 3):
+            raise InvalidToken()
+        return token

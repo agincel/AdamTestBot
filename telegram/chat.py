@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=C0103,W0622
 #
 # A library that provides a Python interface to the Telegram Bot API
 # Copyright (C) 2015-2016
@@ -17,64 +18,54 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""This module contains a object that represents a Telegram Video."""
+"""This module contains a object that represents a Telegram Chat."""
 
-from telegram import PhotoSize, TelegramObject
+from telegram import TelegramObject
 
 
-class Video(TelegramObject):
-    """This object represents a Telegram Video.
+class Chat(TelegramObject):
+    """This object represents a Telegram Chat.
 
     Attributes:
-        file_id (str):
-        width (int):
-        height (int):
-        duration (int):
-        thumb (:class:`telegram.PhotoSize`):
-        mime_type (str):
-        file_size (int):
+        id (int):
+        type (str): Can be 'private', 'group', 'supergroup' or 'channel'
+        title (str): Title, for channels and group chats
+        username (str): Username, for private chats and channels if available
+        first_name (str): First name of the other party in a private chat
+        last_name (str): Last name of the other party in a private chat
 
     Args:
-        file_id (str):
-        width (int):
-        height (int):
-        duration (int):
+        id (int):
+        type (str):
         **kwargs: Arbitrary keyword arguments.
 
     Keyword Args:
-        thumb (Optional[:class:`telegram.PhotoSize`]):
-        mime_type (Optional[str]):
-        file_size (Optional[int]):
+        type (Optional[str]):
     """
 
     def __init__(self,
-                 file_id,
-                 width,
-                 height,
-                 duration,
+                 id,
+                 type,
                  **kwargs):
         # Required
-        self.file_id = str(file_id)
-        self.width = int(width)
-        self.height = int(height)
-        self.duration = int(duration)
+        self.id = int(id)
+        self.type = type
         # Optionals
-        self.thumb = kwargs.get('thumb')
-        self.mime_type = str(kwargs.get('mime_type', ''))
-        self.file_size = int(kwargs.get('file_size', 0))
+        self.title = kwargs.get('title', '')
+        self.username = kwargs.get('username', '')
+        self.first_name = kwargs.get('first_name', '')
+        self.last_name = kwargs.get('last_name', '')
 
     @staticmethod
     def de_json(data):
         """
         Args:
-            data (str):
+            data (dict):
 
         Returns:
-            telegram.Video:
+            telegram.Chat:
         """
         if not data:
             return None
 
-        data['thumb'] = PhotoSize.de_json(data.get('thumb'))
-
-        return Video(**data)
+        return Chat(**data)

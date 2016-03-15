@@ -2,7 +2,8 @@
 # pylint: disable=W0622,E0611
 #
 # A library that provides a Python interface to the Telegram Bot API
-# Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser Public License as published by
@@ -17,7 +18,7 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""This module contains a object that represents a Telegram InputFile"""
+"""This module contains a object that represents a Telegram InputFile."""
 
 try:
     from email.generator import _make_boundary as choose_boundary
@@ -26,6 +27,7 @@ try:
 except ImportError:
     from mimetools import choose_boundary
     from urllib2 import urlopen
+
 import mimetypes
 import os
 import sys
@@ -35,7 +37,7 @@ from telegram import TelegramError
 
 DEFAULT_MIME_TYPE = 'application/octet-stream'
 USER_AGENT = 'Python Telegram Bot' \
-             ' (https://github.com/leandrotoledo/python-telegram-bot)'
+             ' (https://github.com/python-telegram-bot/python-telegram-bot)'
 
 
 class InputFile(object):
@@ -68,19 +70,31 @@ class InputFile(object):
             self.input_name = 'certificate'
             self.input_file = data.pop('certificate')
 
-        if isinstance(self.input_file, file):
+        if str(self.input_file).startswith('http'):
+            from_url = True
+            self.input_file = urlopen(self.input_file)
+        else:
+            from_url = False
+
+        if isinstance(self.input_file, file) or from_url:
+            self.filename = None
             self.input_file_content = self.input_file.read()
             if 'filename' in data:
                 self.filename = self.data.pop('filename')
-            else:
+            elif isinstance(self.input_file, file) and \
+                    hasattr(self.input_file, 'name'):
                 self.filename = os.path.basename(self.input_file.name)
-            self.mimetype = mimetypes.guess_type(self.filename)[0] or \
-                DEFAULT_MIME_TYPE
+            elif from_url:
+                self.filename = os.path.basename(self.input_file.url)\
+                    .split('?')[0].split('&')[0]
 
-        if 'http' in self.input_file:
-            self.input_file_content = urlopen(self.input_file).read()
-            self.mimetype = InputFile.is_image(self.input_file_content)
-            self.filename = self.mimetype.replace('/', '.')
+            try:
+                self.mimetype = InputFile.is_image(self.input_file_content)
+                if not self.filename or '.' not in self.filename:
+                    self.filename = self.mimetype.replace('/', '.')
+            except TelegramError:
+                self.mimetype = mimetypes.guess_type(self.filename)[0] or \
+                    DEFAULT_MIME_TYPE
 
     @property
     def headers(self):
@@ -121,7 +135,7 @@ class InputFile(object):
             form_boundary,
             'Content-Disposition: form-data; name="%s"; filename="%s"' % (
                 self.input_name, self.filename
-                ),
+            ),
             'Content-Type: %s' % self.mimetype,
             '',
             self.input_file_content
@@ -184,10 +198,7 @@ class InputFile(object):
             if file_type:
                 file_content = data[file_type[0]]
 
-                if file_type[0] == 'photo' or file_type[0] == 'document':
-                    return isinstance(file_content, file) or \
-                        str(file_content).startswith('http')
-
-                return isinstance(file_content, file)
+                return isinstance(file_content, file) or \
+                    str(file_content).startswith('http')
 
         return False

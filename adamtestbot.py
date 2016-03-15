@@ -30,7 +30,7 @@ updates = {}
 currentMessage = {}
 
 print("@AdamTestBot 3.5 - Ready to go!")
-print("Written by Adam Gincel, rewritten by Matt Gomez, shoutouts to Smesh, KARMAT, Dank Meme Network, and SG(DC)^2")
+print("Written by Adam Gincel, rewritten by Matt Gomez, shoutouts to Smesh, SG(DC)^2, and Meth Jelly.")
 
 newestOffset = 0
 networkFailure = True
@@ -63,6 +63,10 @@ builtins.blazeList = list()
 builtins.groupsBlazed = list()
 builtins.blazeMessage = ""
 
+builtins.btcDB = Base('chatStorage/btc.pdl') #the path to the btc database
+builtins.btcDB.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', mode="open")
+
+
 # END persistent blaze information
 
 blacklist = [-23535579, -28477145]
@@ -93,7 +97,10 @@ while running:
                 atbCommands.process(atb, user_id, parsedCommand, currentMessage.text, currentMessage, u, datetime.datetime.now() - startTime)
 
         except Exception as myException:
-            print(traceback.format_exc())
+            try:
+                print(traceback.format_exc())
+            except:
+                print("Welp, something went wrong...")
 
     currentTime = datetime.datetime.now().time()
     if previousTime.minute != currentTime.minute:
@@ -112,6 +119,11 @@ while running:
                 builtins.groupsBlazed = list(s)
                 for group in builtins.groupsBlazed:
                     atb.sendMessage(int(group), atbBlaze.blazesummary(datetime.datetime.now()))
+        #calculate BTC once per hour
+        if currentTime.minute == 0: #it's the start of an hour
+            for user in builtins.btcDB:
+                builtins.btcDB.update(user, money=round(user['money'] + user['myYield'], 3))
+            builtins.btcDB.commit()
 
     previousTime = currentTime
     gc.collect()

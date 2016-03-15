@@ -2,7 +2,8 @@
 # pylint: disable=R0902,R0912,R0913
 #
 # A library that provides a Python interface to the Telegram Bot API
-# Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser Public License as published by
@@ -17,12 +18,12 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""This module contains a object that represents a Telegram Message"""
+"""This module contains a object that represents a Telegram Message."""
 
 from datetime import datetime
 from time import mktime
 
-from telegram import (Audio, Contact, Document, GroupChat, Location, PhotoSize,
+from telegram import (Audio, Contact, Document, Chat, Location, PhotoSize,
                       Sticker, TelegramObject, User, Video, Voice)
 
 
@@ -60,7 +61,7 @@ class Message(TelegramObject):
         message_id (int):
         from_user (:class:`telegram.User`):
         date (:class:`datetime.datetime`):
-        chat (:class:`telegram.User` or :class:`telegram.GroupChat`):
+        chat (:class:`telegram.Chat`):
         **kwargs: Arbitrary keyword arguments.
 
     Keyword Args:
@@ -116,6 +117,12 @@ class Message(TelegramObject):
         self.new_chat_photo = kwargs.get('new_chat_photo')
         self.delete_chat_photo = bool(kwargs.get('delete_chat_photo', False))
         self.group_chat_created = bool(kwargs.get('group_chat_created', False))
+        self.supergroup_chat_created = bool(kwargs.get(
+            'supergroup_chat_created', False))
+        self.migrate_to_chat_id = int(kwargs.get('migrate_to_chat_id', 0))
+        self.migrate_from_chat_id = int(kwargs.get('migrate_from_chat_id', 0))
+        self.channel_chat_created = bool(kwargs.get('channel_chat_created',
+                                                    False))
 
     @property
     def chat_id(self):
@@ -126,7 +133,7 @@ class Message(TelegramObject):
     def de_json(data):
         """
         Args:
-            data (str):
+            data (dict):
 
         Returns:
             telegram.Message:
@@ -136,10 +143,7 @@ class Message(TelegramObject):
 
         data['from_user'] = User.de_json(data.get('from'))
         data['date'] = datetime.fromtimestamp(data['date'])
-        if 'first_name' in data.get('chat', ''):
-            data['chat'] = User.de_json(data.get('chat'))
-        elif 'title' in data.get('chat', ''):
-            data['chat'] = GroupChat.de_json(data.get('chat'))
+        data['chat'] = Chat.de_json(data.get('chat'))
         data['forward_from'] = \
             User.de_json(data.get('forward_from'))
         data['forward_date'] = \

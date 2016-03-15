@@ -17,17 +17,22 @@
 # You should have received a copy of the GNU Lesser Public License
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""This module contains a object that represents a logging NullHandler."""
+"""This module contains functions to validate function arguments"""
 
-import logging
+try:
+    type(basestring)
+except NameError:
+    basestring = str
 
 
-class NullHandler(logging.Handler):
-    """This object represents a logging NullHandler."""
+def validate_string(arg, name):
+    """
+    Validate a string argument. Raises a ValueError if `arg` is neither an
+    instance of basestring (Python 2) or str (Python 3) nor None.
 
-    def emit(self, record):
-        """
-        Args:
-            record (str):
-        """
-        pass
+    Args:
+        arg (basestring): The value to be tested
+        name (str): The name of the argument, for the error message
+    """
+    if not isinstance(arg, basestring) and arg is not None:
+        raise ValueError(name + " is not a string")

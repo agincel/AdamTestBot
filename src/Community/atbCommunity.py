@@ -12,7 +12,7 @@ import json
 import traceback
 import os
 import telegram
-import psutil
+#import psutil
 
 from .. import atbSendFunctions as atbSendFunctions
 from .. import atbMiscFunctions as atbMiscFunctions
@@ -46,8 +46,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
     def sendVideo(videoName):
         atbSendFunctions.sendVideo(bot, chat_id, "videos/" + videoName)
 
-    def passSpamCheck():
-        return atbMiscFunctions.spamCheck(chat_id, currentMessage.date)
+    def passSpamCheck(timeDelay=15):
+        return atbMiscFunctions.spamCheck(chat_id, currentMessage.date, timeDelay)
 
     try:
         chatInstanceArray[chat_id]['checking'] = True
@@ -250,7 +250,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 sendText(message)
 
         elif parsedCommand == "/quote":
-            if passSpamCheck():
+            if passSpamCheck(5):
                 sendText(atbQuote.getQuote(chat_id))
 
         elif parsedCommand == "/quoteadd":
@@ -279,7 +279,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/sysinfo - Gets server performance info.\n"
             response += "/grill - I'm a George Foreman grill!\n"
             response += "/pants - Pants?\n"
-            response += "/broken - Tell Matt Gomez your stuff is broken."
+            response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!"
             sendText(response)
 

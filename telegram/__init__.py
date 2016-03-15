@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #
 # A library that provides a Python interface to the Telegram Bot API
-# Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser Public License as published by
@@ -18,12 +19,9 @@
 
 """A library that provides a Python interface to the Telegram Bot API"""
 
-__author__ = 'leandrotoledodesouza@gmail.com'
-__version__ = '3.0.0'
-
 from .base import TelegramObject
 from .user import User
-from .groupchat import GroupChat
+from .chat import Chat
 from .photosize import PhotoSize
 from .audio import Audio
 from .voice import Voice
@@ -45,14 +43,27 @@ from .nullhandler import NullHandler
 from .emoji import Emoji
 from .parsemode import ParseMode
 from .message import Message
+from .inlinequery import InlineQuery
+from .choseninlineresult import ChosenInlineResult
+from .inlinequeryresult import InlineQueryResultArticle, InlineQueryResultGif,\
+    InlineQueryResultMpeg4Gif, InlineQueryResultPhoto, InlineQueryResultVideo
 from .update import Update
 from .bot import Bot
 from .dispatcher import Dispatcher
+from .jobqueue import JobQueue
+from .updatequeue import UpdateQueue
 from .updater import Updater
 
-__all__ = ['Bot', 'Updater', 'Dispatcher', 'Emoji', 'TelegramError',
+
+__author__ = 'devs@python-telegram-bot.org'
+__version__ = '3.3'
+__all__ = ('Bot', 'Updater', 'Dispatcher', 'Emoji', 'TelegramError',
            'InputFile', 'ReplyMarkup', 'ForceReply', 'ReplyKeyboardHide',
            'ReplyKeyboardMarkup', 'UserProfilePhotos', 'ChatAction',
            'Location', 'Contact', 'Video', 'Sticker', 'Document', 'File',
-           'Audio', 'PhotoSize', 'GroupChat', 'Update', 'ParseMode', 'Message',
-           'User', 'TelegramObject', 'NullHandler', 'Voice']
+           'Audio', 'PhotoSize', 'Chat', 'Update', 'ParseMode', 'Message',
+           'User', 'TelegramObject', 'NullHandler', 'Voice', 'JobQueue',
+           'InlineQuery', 'ChosenInlineResult', 'InlineQueryResultArticle',
+           'InlineQueryResultGif', 'InlineQueryResultPhoto',
+           'InlineQueryResultMpeg4Gif', 'InlineQueryResultVideo',
+           'UpdateQueue')

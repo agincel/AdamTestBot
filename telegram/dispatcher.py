@@ -1,27 +1,48 @@
 #!/usr/bin/env python
+#
+# A library that provides a Python interface to the Telegram Bot API
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser Public License for more details.
+#
+# You should have received a copy of the GNU Lesser Public License
+# along with this program.  If not, see [http://www.gnu.org/licenses/].
 
-"""
-This module contains the Dispatcher class.
-"""
+"""This module contains the Dispatcher class."""
+
 import logging
 from functools import wraps
 from inspect import getargspec
-from threading import Thread, BoundedSemaphore, Lock
-from re import match
+from threading import Thread, BoundedSemaphore, Lock, Event, current_thread
+from re import match, split
+from time import sleep
 
 from telegram import (TelegramError, Update, NullHandler)
+from telegram.updatequeue import Empty
 
 H = NullHandler()
 logging.getLogger(__name__).addHandler(H)
 
 semaphore = None
-running_async = 0
+async_threads = set()
+""":type: set[Thread]"""
 async_lock = Lock()
 
 
 def run_async(func):
     """
-    Function decorator that will run the function in a new thread.
+    Function decorator that will run the function in a new thread. A function
+    decorated with this will have to include **kwargs in their parameter list,
+    which will contain all optional parameters.
 
     Args:
         func (function): The function to run in the thread.
@@ -30,28 +51,29 @@ def run_async(func):
         function:
     """
 
+    # TODO: handle exception in async threads
+    #       set a threading.Event to notify caller thread
+
     @wraps(func)
-    def pooled(*args, **kwargs):
+    def pooled(*pargs, **kwargs):
         """
         A wrapper to run a thread in a thread pool
         """
-        global running_async, async_lock
-        result = func(*args, **kwargs)
+        result = func(*pargs, **kwargs)
         semaphore.release()
         with async_lock:
-            running_async -= 1
+            async_threads.remove(current_thread())
         return result
 
     @wraps(func)
-    def async_func(*args, **kwargs):
+    def async_func(*pargs, **kwargs):
         """
         A wrapper to run a function in a thread
         """
-        global running_async, async_lock
-        thread = Thread(target=pooled, args=args, kwargs=kwargs)
+        thread = Thread(target=pooled, args=pargs, kwargs=kwargs)
         semaphore.acquire()
         with async_lock:
-            running_async += 1
+            async_threads.add(thread)
         thread.start()
         return thread
 
@@ -61,38 +83,64 @@ def run_async(func):
 class Dispatcher:
     """
     This class dispatches all kinds of updates to its registered handlers.
+    A handler is a function that usually takes the following parameters
 
-    A handler is a function that usually takes the following parameters:
-        bot: The telegram.Bot instance that received the message
-        update: The update that should be handled by the handler
+        bot:
+            The telegram.Bot instance that received the message
+        update:
+            The update that should be handled by the handler
 
-    Error handlers take an additional parameter:
-        error: The TelegramError instance that was raised during processing the
+    Error handlers take an additional parameter
+
+        error:
+            The TelegramError instance that was raised during processing the
             update
 
     All handlers, except error handlers, can also request more information by
     appending one or more of the following arguments in their argument list for
-    convenience:
-        update_queue: The Queue instance which contains all new updates and is
+    convenience
+
+        update_queue:
+            The Queue instance which contains all new updates and is
             processed by the Dispatcher. Be careful with this - you might
             create an infinite loop.
-        args: If the update is an instance str or telegram.Update, this will be
+        args:
+            If the update is an instance str or telegram.Update, this will be
             a list that contains the content of the message split on spaces,
             except the first word (usually the command).
             Example: '/add item1 item2 item3' -> ['item1', 'item2', 'item3']
+            For updates that contain inline queries, they will contain the
+            whole query split on spaces.
             For other updates, args will be None
 
-    Attributes:
+    In some cases handlers may need some context data to process the update. To
+    procedure just queue in  update_queue.put(update, context=context) or
+    processUpdate(update,context=context).
+
+        context:
+            Extra data for handling updates.
+
+    For regex-based handlers, you can also request information about the match.
+    For all other handlers, these will be None
+
+        groups:
+            A tuple that contains the result of
+            re.match(matcher, ...).groups()
+        groupdict:
+            A dictionary that contains the result of
+            re.match(matcher, ...).groupdict()
 
     Args:
         bot (telegram.Bot): The bot object that should be passed to the
-        handlers update_queue (queue.Queue): The synchronized queue that will
-        contain the updates.
+            handlers
+        update_queue (telegram.UpdateQueue): The synchronized queue that will
+            contain the updates.
     """
-    def __init__(self, bot, update_queue, workers=4):
+    def __init__(self, bot, update_queue, workers=4, exception_event=None):
         self.bot = bot
         self.update_queue = update_queue
         self.telegram_message_handlers = []
+        self.telegram_inline_handlers = []
         self.telegram_command_handlers = {}
         self.telegram_regex_handlers = {}
         self.string_regex_handlers = {}
@@ -103,6 +151,8 @@ class Dispatcher:
         self.error_handlers = []
         self.logger = logging.getLogger(__name__)
         self.running = False
+        self.__stop_event = Event()
+        self.__exception_event = exception_event or Event()
 
         global semaphore
         if not semaphore:
@@ -110,41 +160,60 @@ class Dispatcher:
         else:
             self.logger.info("Semaphore already initialized, skipping.")
 
-    class _Stop(object):
-        """
-        A class which objects can be passed into the update queue to stop the
-        thread
-        """
-        pass
-
     def start(self):
         """
         Thread target of thread 'dispatcher'. Runs in background and processes
         the update queue.
         """
 
+        if self.running:
+            self.logger.warning('already running')
+            return
+
+        if self.__exception_event.is_set():
+            msg = 'reusing dispatcher after exception event is forbidden'
+            self.logger.error(msg)
+            raise TelegramError(msg)
+
         self.running = True
-        self.logger.info('Dispatcher thread started')
+        self.logger.info('Dispatcher started')
 
-        while True:
-            update = None
-
+        while 1:
             try:
                 # Pop update from update queue.
-                # Blocks if no updates are available.
-                update = self.update_queue.get()
-
-                if type(update) is self._Stop:
+                update, context = self.update_queue.get(True, 1, True)
+            except Empty:
+                if self.__stop_event.is_set():
+                    self.logger.info('orderly stopping')
                     break
+                elif self.__stop_event.is_set():
+                    self.logger.critical(
+                        'stopping due to exception in another thread')
+                    break
+                continue
 
-                self.processUpdate(update)
-                self.logger.debug('Processed Update: %s' % update)
+            try:
+                self.processUpdate(update, context)
+                self.logger.debug('Processed Update: %s with context %s'
+                                  % (update, context))
 
             # Dispatch any errors
             except TelegramError as te:
                 self.logger.warn("Error was raised while processing Update.")
-                self.dispatchError(update, te)
 
+                try:
+                    self.dispatchError(update, te)
+                # Log errors in error handlers
+                except:
+                    self.logger.exception("An uncaught error was raised while "
+                                          "handling the error")
+
+            # All other errors should not stop the thread, just print them
+            except:
+                self.logger.exception("An uncaught error was raised while "
+                                      "processing an update")
+
+        self.running = False
         self.logger.info('Dispatcher thread stopped')
 
     def stop(self):
@@ -152,10 +221,12 @@ class Dispatcher:
         Stops the thread
         """
         if self.running:
-            self.running = False
-            self.update_queue.put(self._Stop())
+            self.__stop_event.set()
+            while self.running:
+                sleep(0.1)
+            self.__stop_event.clear()
 
-    def processUpdate(self, update):
+    def processUpdate(self, update, context=None):
         """
         Processes a single update.
 
@@ -168,15 +239,15 @@ class Dispatcher:
         # Custom type handlers
         for t in self.type_handlers:
             if isinstance(update, t):
-                self.dispatchType(update)
+                self.dispatchType(update, context)
                 handled = True
 
         # string update
         if type(update) is str and update.startswith('/'):
-            self.dispatchStringCommand(update)
+            self.dispatchStringCommand(update, context)
             handled = True
         elif type(update) is str:
-            self.dispatchStringRegex(update)
+            self.dispatchRegex(update, context)
             handled = True
 
         # An error happened while polling
@@ -185,21 +256,23 @@ class Dispatcher:
             handled = True
 
         # Telegram update (regex)
-        if isinstance(update, Update):
-            self.dispatchTelegramRegex(update)
+        if isinstance(update, Update) and update.message is not None:
+            self.dispatchRegex(update, context)
             handled = True
 
-        # Telegram update (command)
-        if isinstance(update, Update) \
-                and update.message.text.startswith('/'):
-            self.dispatchTelegramCommand(update)
-            handled = True
+            # Telegram update (command)
+            if update.message.text.startswith('/'):
+                self.dispatchTelegramCommand(update, context)
 
-        # Telegram update (message)
-        elif isinstance(update, Update):
-            self.dispatchTelegramMessage(update)
-            handled = True
-
+            # Telegram update (message)
+            else:
+                self.dispatchTelegramMessage(update, context)
+                handled = True
+        elif isinstance(update, Update) and \
+                (update.inline_query is not None or
+                 update.chosen_inline_result is not None):
+                self.dispatchTelegramInline(update, context)
+                handled = True
         # Update not recognized
         if not handled:
             self.dispatchError(update, TelegramError(
@@ -216,6 +289,17 @@ class Dispatcher:
         """
 
         self.telegram_message_handlers.append(handler)
+
+    def addTelegramInlineHandler(self, handler):
+        """
+        Registers an inline query handler in the Dispatcher.
+
+        Args:
+            handler (function): A function that takes (Bot, Update, *args) as
+                arguments.
+        """
+
+        self.telegram_inline_handlers.append(handler)
 
     def addTelegramCommandHandler(self, command, handler):
         """
@@ -346,6 +430,17 @@ class Dispatcher:
         if handler in self.telegram_message_handlers:
             self.telegram_message_handlers.remove(handler)
 
+    def removeTelegramInlineHandler(self, handler):
+        """
+        De-registers an inline query handler.
+
+        Args:
+            handler (any):
+        """
+
+        if handler in self.telegram_inline_handlers:
+            self.telegram_inline_handlers.remove(handler)
+
     def removeTelegramCommandHandler(self, command, handler):
         """
         De-registers a command handler.
@@ -443,7 +538,7 @@ class Dispatcher:
                 and handler in self.type_handlers[the_type]:
             self.type_handlers[the_type].remove(handler)
 
-    def dispatchTelegramCommand(self, update):
+    def dispatchTelegramCommand(self, update, context=None):
         """
         Dispatches an update that contains a command.
 
@@ -453,34 +548,42 @@ class Dispatcher:
                 command
         """
 
-        command = update.message.text.split(' ')[0][1:].split('@')[0]
+        command = split('\W', update.message.text[1:])[0]
 
         if command in self.telegram_command_handlers:
-            self.dispatchTo(self.telegram_command_handlers[command], update)
+            self.dispatchTo(self.telegram_command_handlers[command], update,
+                            context=context)
         else:
-            self.dispatchTo(self.unknown_telegram_command_handlers, update)
+            self.dispatchTo(self.unknown_telegram_command_handlers, update,
+                            context=context)
 
-    def dispatchTelegramRegex(self, update):
+    def dispatchRegex(self, update, context=None):
         """
-        Dispatches an update to all regex handlers that match the message
-        string.
+        Dispatches an update to all string or telegram regex handlers that
+        match the string/message content.
 
         Args:
-            command (str): The command keyword
-            update (telegram.Update): The Telegram update that contains the
-                command
+            update (str, Update): The update that should be checked for matches
         """
 
-        matching_handlers = []
+        if isinstance(update, Update):
+            handlers = self.telegram_regex_handlers
+            to_match = update.message.text
+        elif isinstance(update, str):
+            handlers = self.string_regex_handlers
+            to_match = update
 
-        for matcher in self.telegram_regex_handlers:
-            if match(matcher, update.message.text):
-                for handler in self.telegram_regex_handlers[matcher]:
-                    matching_handlers.append(handler)
+        for matcher in handlers:
+            m = match(matcher, to_match)
+            if m:
+                for handler in handlers[matcher]:
+                    self.call_handler(handler,
+                                      update,
+                                      groups=m.groups(),
+                                      groupdict=m.groupdict(),
+                                      context=context)
 
-        self.dispatchTo(matching_handlers, update)
-
-    def dispatchStringCommand(self, update):
+    def dispatchStringCommand(self, update, context=None):
         """
         Dispatches a string-update that contains a command.
 
@@ -491,31 +594,13 @@ class Dispatcher:
         command = update.split(' ')[0][1:]
 
         if command in self.string_command_handlers:
-            self.dispatchTo(self.string_command_handlers[command], update)
+            self.dispatchTo(self.string_command_handlers[command], update,
+                            context=context)
         else:
-            self.dispatchTo(self.unknown_string_command_handlers, update)
+            self.dispatchTo(self.unknown_string_command_handlers, update,
+                            context=context)
 
-    def dispatchStringRegex(self, update):
-        """
-        Dispatches an update to all string regex handlers that match the
-        string.
-
-        Args:
-            command (str): The command keyword
-            update (telegram.Update): The Telegram update that contains the
-                command
-        """
-
-        matching_handlers = []
-
-        for matcher in self.string_regex_handlers:
-            if match(matcher, update):
-                for handler in self.string_regex_handlers[matcher]:
-                    matching_handlers.append(handler)
-
-        self.dispatchTo(matching_handlers, update)
-
-    def dispatchType(self, update):
+    def dispatchType(self, update, context=None):
         """
         Dispatches an update of any type.
 
@@ -525,12 +610,9 @@ class Dispatcher:
 
         for t in self.type_handlers:
             if isinstance(update, t):
-                self.dispatchTo(self.type_handlers[t], update)
-        else:
-            self.dispatchError(update, TelegramError(
-                "Received update of unknown type %s" % type(update)))
+                self.dispatchTo(self.type_handlers[t], update, context=context)
 
-    def dispatchTelegramMessage(self, update):
+    def dispatchTelegramMessage(self, update, context=None):
         """
         Dispatches an update that contains a regular message.
 
@@ -539,7 +621,19 @@ class Dispatcher:
                 message.
         """
 
-        self.dispatchTo(self.telegram_message_handlers, update)
+        self.dispatchTo(self.telegram_message_handlers, update,
+                        context=context)
+
+    def dispatchTelegramInline(self, update, context=None):
+        """
+        Dispatches an update that contains an inline update.
+
+        Args:
+            update (telegram.Update): The Telegram update that contains the
+                message.
+        """
+
+        self.dispatchTo(self.telegram_inline_handlers, update, context=None)
 
     def dispatchError(self, update, error):
         """
@@ -553,7 +647,7 @@ class Dispatcher:
         for handler in self.error_handlers:
             handler(self.bot, update, error)
 
-    def dispatchTo(self, handlers, update):
+    def dispatchTo(self, handlers, update, **kwargs):
         """
         Dispatches an update to a list of handlers.
 
@@ -563,9 +657,9 @@ class Dispatcher:
         """
 
         for handler in handlers:
-            self.call_handler(handler, update)
+            self.call_handler(handler, update, **kwargs)
 
-    def call_handler(self, handler, update):
+    def call_handler(self, handler, update, **kwargs):
         """
         Calls an update handler. Checks the handler for keyword arguments and
         fills them, if possible.
@@ -574,20 +668,39 @@ class Dispatcher:
             handler (function): An update handler function
             update (any): An update
         """
-        kwargs = {}
+
+        target_kwargs = {}
         fargs = getargspec(handler).args
 
-        if 'update_queue' in fargs:
-            kwargs['update_queue'] = self.update_queue
+        '''
+        async handlers will receive all optional arguments, since we can't
+        their argument list.
+        '''
 
-        if 'args' in fargs:
-            if isinstance(update, Update):
+        is_async = 'pargs' == getargspec(handler).varargs
+
+        if is_async or 'update_queue' in fargs:
+            target_kwargs['update_queue'] = self.update_queue
+
+        if is_async or 'args' in fargs:
+            if isinstance(update, Update) and update.message:
                 args = update.message.text.split(' ')[1:]
+            elif isinstance(update, Update) and update.inline_query:
+                args = update.inline_query.query.split(' ')
             elif isinstance(update, str):
                 args = update.split(' ')[1:]
             else:
                 args = None
 
-            kwargs['args'] = args
+            target_kwargs['args'] = args
 
-        handler(self.bot, update, **kwargs)
+        if is_async or 'groups' in fargs:
+            target_kwargs['groups'] = kwargs.get('groups', None)
+
+        if is_async or 'groupdict' in fargs:
+            target_kwargs['groupdict'] = kwargs.get('groupdict', None)
+
+        if is_async or 'context' in fargs:
+            target_kwargs['context'] = kwargs.get('context', None)
+
+        handler(self.bot, update, **target_kwargs)

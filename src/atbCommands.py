@@ -16,12 +16,14 @@ from . import atbMiscFunctions
 from . import atbAdLib
 from . import atbLikes
 from . import atbBlaze
+from . import atbBTC
 from .Community import atbCommunity as atbCommunity
 
 from pydblite import Base #The PyDbLite stuff
 import builtins
 
 chatInstanceArray = {}
+btcInstanceArray = {}
 spamLimitTime = 15
 messageSent = 1
 
@@ -29,11 +31,11 @@ messageSent = 1
 def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge):
     global messageSent
 
-    def sendText(givenText, replyingMessageID=0, keyboardLayout=[]):
+    def sendText(givenText, replyingMessageID=0, keyboardLayout=[], markdown=False):
         if not chatInstanceArray[chat_id]['adminDisable']:
             global messageSent
             messageSent += 1
-            atbSendFunctions.sendText(bot, chat_id, givenText, replyingMessageID, keyboardLayout)
+            atbSendFunctions.sendText(bot, chat_id, givenText, replyingMessageID, keyboardLayout, markdown=markdown)
 
     def sendPhoto(imageName):
         global messageSent
@@ -45,8 +47,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         messageSent += 1
         atbSendFunctions.sendSticker(bot, chat_id, "stickers/" + stickerName)
 
-    def passSpamCheck():
-        return atbMiscFunctions.spamCheck(chat_id, currentMessage.date)
+    def passSpamCheck(timeDelay=15):
+        return atbMiscFunctions.spamCheck(chat_id, currentMessage.date, timeDelay)
 
     try:
         atbMiscFunctions.log(chat_id, currentMessage)
@@ -54,7 +56,12 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         try:
             chatInstanceArray[chat_id]['checking'] = True
         except Exception:
-            chatInstanceArray[chat_id] = {'checking': True, 'adminDisable': False, 'spamTimestamp': 0, 'shottyTimestamp': 0, 'shottyWinner': "", 'checkingVehicles': False, 'whoArray': []}
+            chatInstanceArray[chat_id] = {'checking': True, 'adminDisable': False, 'spamTimestamp': 0, 'shottyTimestamp': 0, 'shottyWinner': "", 'checkingVehicles': False, 'whoArray': [], 'lobbyList': list()}
+
+        try:
+            btcInstanceArray[chat_id]['checking'] = True
+        except Exception:
+            btcInstanceArray[chat_id] = {'checking': True, 'shopType': "upgrades", 'shopPage': 0, 'buyingItem': "", 'itemTarget': "", 'enteringTarget': False}
 
         if parsedCommand == "/admin":
             if currentMessage.from_user.username == "Adam_ZG":
@@ -171,8 +178,55 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         elif parsedCommand == "/pick":
             sendText(atbMiscFunctions.pickResponse(messageText))
 
+        elif parsedCommand == "/lobby":
+            name = currentMessage.from_user.first_name
+            try:
+                name += " " + currentMessage.from_user.last_name[0].upper() + "."
+            except:
+                pass
+            if messageText != "/lobby show":
+                if [name, currentMessage.from_user.id] in chatInstanceArray[chat_id]['lobbyList']:
+                    chatInstanceArray[chat_id]['lobbyList'].remove([name, currentMessage.from_user.id])
+                else:
+                    chatInstanceArray[chat_id]['lobbyList'].append([name, currentMessage.from_user.id])
+            elif messageText == "/lobby close" or messageText == "/lobby exit" or messageText == "/lobby leave" or messageText == "/lobby clear":
+                    chatInstanceArray[chat_id]['lobbyList'] = list()
+            outputString = "```\nLobby:\n"
+            for user in chatInstanceArray[chat_id]['lobbyList']:
+                outputString += "\t" + user[0] + "\n"
+            outputString += "----------------\n'/lobby show' displays the Lobby\n'/lobby leave' clears it```"
+            if passSpamCheck(5) or messageText == "/lobby show":
+                sendText(outputString, markdown=True)
+
+        elif parsedCommand == "/markdown":
+            bot.sendMessage(chat_id=chat_id, text="```\nLook at this beautiful\nMONOSPACE```", parse_mode="Markdown")
+
         elif parsedCommand == "/fmk":
             sendText(atbMiscFunctions.fmk(re.split(r'[@\s*]', messageText[len("/fmk "):])))
+
+        elif parsedCommand == "/scale":
+            splitText = re.split(r'[@\s:,\'*]', currentMessage.text.lower())
+            output = ""
+            if len(splitText) < 3:
+                output = "USAGE: '/scale a b'"
+            else:
+                try:
+                    low = int(splitText[1])
+                    high = int(splitText[2])
+                    ret = 0
+                    if low < high:
+                        ret = random.randrange(low, high + 2)
+                    elif low > high:
+                        ret = random.randrange(high, low + 2)
+                    else:
+                        ret = low
+
+                    if random.randrange(1, 100) == 57:
+                        ret += 1
+                    output = str(ret)
+                except:
+                    output = "USAGE: '/scale a b' where a and b are numbers"
+            sendText(output)
 
         elif parsedCommand == "/fight":
             sendText(atbMiscFunctions.fightResponse(currentMessage))
@@ -238,6 +292,19 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 timeRemaining = int(chatInstanceArray[chat_id]['shottyTimestamp'] - (time.mktime(currentMessage.date.timetuple()) - 3600)) / 60 + 1
                 sendText(chatInstanceArray[chat_id]['shottyWinner'] + " has shotty for the next " + str(timeRemaining) + " minutes.")
 
+        elif parsedCommand == "/btc":
+            result = atbBTC.handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge, btcInstanceArray[chat_id])
+            print(btcInstanceArray[chat_id]['shopPage'])
+            if result != []:
+                if result[1] == "markdown":
+                    sendText(result[0], markdown=True)
+                elif result[1] == "keyboard":
+                    sendText(result[0], keyboardLayout=result[2])
+                elif result[1] == "no":
+                    pass
+                else:
+                    sendText(result[0])
+
         elif parsedCommand == "/help":
             sendText(atbMiscFunctions.helpResponse())
 
@@ -258,6 +325,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 elif messageText.lower() == "i fucking love vehicles":
                     sendText("FUCKIN RIGHT YOU DO, " + currentMessage.from_user.first_name.upper(), replyingMessageID=currentMessage.message_id)
                     chatInstanceArray[chat_id]['checkingVehicles'] = False
+            elif btcInstanceArray[chat_id]['enteringTarget']:
+                result = atbBTC.handleBTC(bot, chat_id, parsedCommand, "/btc target " + messageText, currentMessage, update, instanceAge, btcInstanceArray[chat_id])
 
         else:
             if not atbCommunity.process(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge):

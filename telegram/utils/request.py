@@ -2,7 +2,8 @@
 # pylint: disable=no-name-in-module,unused-import
 #
 # A library that provides a Python interface to the Telegram Bot API
-# Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
+# Copyright (C) 2015-2016
+# Leandro Toledo de Souza <devs@python-telegram-bot.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser Public License as published by
@@ -19,19 +20,30 @@
 
 """This module contains methods to make POST and GET requests"""
 
+import functools
 import json
 import socket
 from ssl import SSLError
 
 try:
-    from urllib.request import urlopen, urlretrieve, Request
-    from urllib.error import HTTPError
+    # python2
+    from httplib import HTTPException
 except ImportError:
+    # python3
+    from http.client import HTTPException
+
+try:
+    # python3
+    from urllib.request import urlopen, urlretrieve, Request
+    from urllib.error import HTTPError, URLError
+except ImportError:
+    # python2
     from urllib import urlretrieve
-    from urllib2 import urlopen, Request
+    from urllib2 import urlopen, Request, URLError
     from urllib2 import HTTPError
 
 from telegram import (InputFile, TelegramError)
+from telegram.error import Unauthorized, NetworkError, TimedOut
 
 
 def _parse(json_data):
@@ -45,7 +57,11 @@ def _parse(json_data):
     Returns:
       A JSON parsed as Python dict with results.
     """
-    data = json.loads(json_data.decode())
+    decoded_s = json_data.decode('utf-8')
+    try:
+        data = json.loads(decoded_s)
+    except ValueError:
+        raise TelegramError('Invalid server response')
 
     if not data.get('ok') and data.get('description'):
         return data['description']
@@ -53,6 +69,47 @@ def _parse(json_data):
     return data['result']
 
 
+def _try_except_req(func):
+    """Decorator for requests to handle known exceptions"""
+    @functools.wraps(func)
+    def decorator(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+
+        except HTTPError as error:
+            # `HTTPError` inherits from `URLError` so `HTTPError` handling must
+            # come first.
+            errcode = error.getcode()
+
+            if errcode in (401, 403):
+                raise Unauthorized()
+            if errcode == 502:
+                raise NetworkError('Bad Gateway')
+
+            try:
+                message = _parse(error.read())
+            except ValueError:
+                message = 'Unknown HTTPError {0}'.format(error.getcode())
+
+            raise NetworkError('{0} ({1})'.format(message, errcode))
+
+        except URLError as error:
+            raise NetworkError('URLError: {0}'.format(error.reason))
+
+        except (SSLError, socket.timeout) as error:
+            err_s = str(error)
+            if "operation timed out" in err_s:
+                raise TimedOut()
+
+            raise NetworkError(err_s)
+
+        except HTTPException as error:
+            raise NetworkError('HTTPException: {0!r}'.format(error))
+
+    return decorator
+
+
+@_try_except_req
 def get(url):
     """Request an URL.
     Args:
@@ -67,8 +124,10 @@ def get(url):
     return _parse(result)
 
 
+@_try_except_req
 def post(url,
          data,
+         timeout=None,
          network_delay=2.):
     """Request an URL.
     Args:
@@ -76,56 +135,46 @@ def post(url,
         The web location we want to retrieve.
       data:
         A dict of (str, unicode) key/value pairs.
+      timeout:
+        float. If this value is specified, use it as the definitive timeout (in
+        seconds) for urlopen() operations. [Optional]
       network_delay:
-        Additional timeout in seconds to allow the response from Telegram to
-        take some time.
+        float. If using the timeout specified in `data` (which is a timeout for
+        the Telegram servers operation), then `network_delay` as an extra delay
+        (in seconds) to compensate for network latency.
+        default: 2 [Optional]
+
+    Notes:
+      If neither `timeout` nor `data['timeout']` is specified. The underlying
+      defaults are used.
 
     Returns:
       A JSON object.
+
     """
+    urlopen_kwargs = {}
 
-    # Add time to the timeout of urlopen to allow data to be transferred over
-    # the network.
-    if 'timeout' in data:
-        timeout = data['timeout'] + network_delay
+    if timeout is not None:
+        urlopen_kwargs['timeout'] = timeout
+    elif 'timeout' in data:
+        urlopen_kwargs['timeout'] = data['timeout'] + network_delay
+
+    if InputFile.is_inputfile(data):
+        data = InputFile(data)
+        request = Request(url,
+                          data=data.to_form(),
+                          headers=data.headers)
     else:
-        timeout = 3
+        data = json.dumps(data)
+        request = Request(url,
+                          data=data.encode(),
+                          headers={'Content-Type': 'application/json'})
 
-    try:
-        if InputFile.is_inputfile(data):
-            data = InputFile(data)
-            request = Request(url,
-                              data=data.to_form(),
-                              headers=data.headers)
-        else:
-            data = json.dumps(data)
-            request = Request(url,
-                              data=data.encode(),
-                              headers={'Content-Type': 'application/json'})
-
-        result = urlopen(request, timeout=timeout).read()
-    except HTTPError as error:
-        if error.getcode() == 403:
-            raise TelegramError('Unauthorized')
-        if error.getcode() == 502:
-            raise TelegramError('Bad Gateway')
-
-        try:
-            message = _parse(error.read())
-        except ValueError:
-            message = 'Unknown HTTPError'
-
-        raise TelegramError(message)
-    except (SSLError, socket.timeout) as error:
-        if "operation timed out" in str(error):
-            raise TelegramError("Timed out")
-
-        raise TelegramError(str(error))
-    except Exception:
-        pass
+    result = urlopen(request, **urlopen_kwargs).read()
     return _parse(result)
 
 
+@_try_except_req
 def download(url,
              filename):
     """Download a file by its URL.

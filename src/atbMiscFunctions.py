@@ -15,7 +15,6 @@ from pydblite import Base #The PyDbLite stuff
 import builtins
 
 messagesSent = 0
-spamLimitTime = 15
 
 spamArray = {}
 
@@ -66,15 +65,14 @@ def adlibResponse():
     response += "Any of these commands can be given with a capitalized first letter (ie /Noun) to guarantee the first letter of the returned word will be capitalized, or in all caps (ie /VERB) to get a word in all caps.\n"
     return response
 
-def spamCheck(chat_id, date):
+def spamCheck(chat_id, date, timeDelay=15):
     global spamArray
-    global spamLimitTime
     try:
         spamArray[chat_id]['checking'] = True
     except Exception:
         spamArray[chat_id] = {'checking': True, 'spamTimestamp': 0}
 
-    if time.mktime(date.timetuple()) - spamLimitTime > spamArray[chat_id]['spamTimestamp']:
+    if time.mktime(date.timetuple()) - timeDelay > spamArray[chat_id]['spamTimestamp']:
         spamArray[chat_id]['spamTimestamp'] = time.mktime(date.timetuple())
         return True
     else:
