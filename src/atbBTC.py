@@ -101,7 +101,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             info = ["Chisel", 75.0, "upgrade", 1.25]
         else:
             return []
-        return [info[0] + " (+" + str(round(float(info[3]), 3)) + " " + strPerHour + ") (" + str(round(float(info[1]), 3)) + strBtc + ")", info[1], info[2], info[3]]
+        return [info[0] + " (+" + str(round(float(info[3]), 3)) + " " + strPerHour + "): " + str(round(float(info[1]), 3)) + strBtc + "\n", info[1], info[2], info[3]]
 
     def shop(newCommand):
         returnText = ""
@@ -114,11 +114,14 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             keyboardLayout = [["/btc shop upgrades"], ["/btc shop consumables"], ["/btc shop weapons"]]
         else:
             if newCommand[1] == "upgrades":
-                returnText = "Upgrades! Page 1."
+                returnText = "Upgrades! Page 1:\n"
+                returnText += getItemInfo("Q-Tip")[0]
+                returnText += getItemInfo("Toothpick")[0]
+                returnText += getItemInfo("Chisel")[0]
                 buy = "/btc buy "
-                keyboardLayout.append([buy + getItemInfo("Q-Tip")[0]])
-                keyboardLayout.append([buy + getItemInfo("Toothpick")[0]])
-                keyboardLayout.append([buy + getItemInfo("Chisel")[0]])
+                keyboardLayout.append([buy + "Q-Tip 1"])
+                keyboardLayout.append([buy + "Toothpick 1"])
+                keyboardLayout.append([buy + "Chisel 1"])
                 keyboardLayout.append(["/btc exit"])
             else:
                 returnText = "Sorry! Not implemented yet."
@@ -129,18 +132,20 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
     def buy(newCommand):
         if len(newCommand) > 1: #buying something
             itemInfo = getItemInfo(newCommand[1])
-
             quantity = 1
             try:
                 quantity = int(newCommand[-1])
             except:
                 pass
+            if quantity < 0:
+                quantity *= -1
+
             quantityPurchased = 0
             if itemInfo != []:
                 user = getUser(currentMessage.from_user.id)
                 if float(itemInfo[1]) * quantity > float(user['money']):
                     quantity = int(float(user['money'])/float(itemInfo[1]))
-                if float(user['money']) >= float(itemInfo[1]) * quantity: #can afford
+                if float(user['money']) >= float(itemInfo[1]) * quantity and quantity != 0: #can afford
                     quantityPurchased = quantity
                     if itemInfo[2] == "upgrade":
                         builtins.btcDB.update(user, money=user['money'] - (itemInfo[1] * quantity))
@@ -181,15 +186,15 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
 
     # -------- end helper function declarations ------- #
 
-    if newCommand[0] == '':
-        return [getLedger(), "markdown"]
+    if newCommand[0] == '' and int(chat_id) < 0:
+        return ["Check the Ledger by typing /btc in a private chat with me. Join " + strBotCoin + " by typing '/btc join'!", ""]
     elif newCommand[0] == 'list':
         return [getLedger("money"), "markdown"]
     elif newCommand[0] == "join":
         if getUser(currentMessage.from_user.id) == None:
             username = currentMessage.from_user.username
             if username == "":
-                username = currentMessage.from_user.first_name + str(currentMessage.from_user.id / 100000)
+                username = currentMessage.from_user.first_name + str(int(currentMessage.from_user.id / 100000))
             name = currentMessage.from_user.first_name
             userLastInitial = ""
             try:
@@ -211,7 +216,9 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             print(newCommand)
         except:
             pass
-        if newCommand[0] == "help":
+        if newCommand[0] == "":
+            return [getLedger(), "markdown"]
+        elif newCommand[0] == "help":
             return [getHelp(), "markdown"]
         elif newCommand[0] == "intro":
             return [getIntro(), ""]
@@ -221,6 +228,11 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             return buy(newCommand)
         elif newCommand[0] == "exit":
             return ["Bye!", ""]
+        elif newCommand[0] == "fix" and currentMessage.from_user.username == "AdamZG":
+            for user in builtins.btcDB:
+                if user['username'].find(".") != -1:
+                    builtins.btcDB.update(user, username=user['username'][0:user['username'].find(".")])
+            return ["Fixed up the database.", ""]
         elif newCommand[0] == "remove":
             builtins.btcDB.delete(getUser(currentMessage.from_user.id))
             return["Sorry to see you go. :(", ""]
