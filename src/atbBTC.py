@@ -41,6 +41,9 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
     strBotCoin = "Bot₵oin Beta"
     strPerHour = "⁄hr"
 
+    def floatRound(fuck):
+        return round(fuck, 3)
+
     def getLedger(keyField='myYield'):
         outputString = "```\n" + strBotCoin + " Ledger:\n"
         K = list()
@@ -50,7 +53,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         for user in sortedK:
             outputString += user['username'] + " (" + user['name'] + ")\n\t" + str((round(user['money'], 3))) + strBtc + " - " 
             if float(user['positiveMultiplier']) != 0:
-                outputString += "(" + str(user['positiveMulplier']) + "x) "
+                outputString += "(" + str(user['positiveMultiplier']) + "x) "
             if float(user['zeroMultiplier']) == 0:
                 outputString += "(0x) "
             if float(user['negativeMultiplier']) != 0:
@@ -101,9 +104,16 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             info = ["Q-Tip", 0.1, "upgrade", 0.001]
         elif itemName == "Chisel":
             info = ["Chisel", 75.0, "upgrade", 1.25]
+        elif itemName == "Steroid":
+            info = ["Steroid", floatRound(getUser(currentMessage.from_user.id)['myYield'] * 0.8), "consumable", 1.5]
         else:
             return []
-        return [info[0] + " (+" + str(round(float(info[3]), 3)) + " " + strPerHour + "): " + str(round(float(info[1]), 3)) + strBtc + "\n", info[1], info[2], info[3]]
+        if info[2] == "upgrade":
+            return [info[0] + " (+" + str(round(float(info[3]), 3)) + " " + strPerHour + "): " + str(floatRound(float(info[1]))) + strBtc + "\n", info[1], info[2], info[3]]
+        elif info[2] == "consumable":
+            return [info[0] + " (yield x" + str(info[3]) + "): " + str(info[1]) + strBtc + "\n", info[1], info[2], info[3]]
+        else:
+            return []
 
     def shop(newCommand):
         returnText = ""
@@ -124,6 +134,12 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 keyboardLayout.append([buy + "Q-Tip 1"])
                 keyboardLayout.append([buy + "Toothpick 1"])
                 keyboardLayout.append([buy + "Chisel 1"])
+                keyboardLayout.append(["/btc exit"])
+            elif newCommand[1] == "consumables":
+                returnText = "Consumables! Page 1:\n"
+                returnText += getItemInfo("Steroid")[0]
+                buy = "/btc buy "
+                keyboardLayout.append([buy + "Steroid"])
                 keyboardLayout.append(["/btc exit"])
             else:
                 returnText = "Sorry! Not implemented yet."
@@ -149,13 +165,22 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                     quantity = int(float(user['money'])/float(itemInfo[1]))
                 if float(user['money']) >= float(itemInfo[1]) * quantity and quantity != 0: #can afford
                     quantityPurchased = quantity
-                    if itemInfo[2] == "upgrade":
-                        builtins.btcDB.update(user, money=user['money'] - (itemInfo[1] * quantity))
-                        builtins.btcDB.update(user, myYield=round(user['myYield'] + (itemInfo[3] * quantity), 3))  
                 else:
-                    return ["Come back when you're a little mmmm...richer.", ""]          
-                builtins.btcDB.commit()
-                return ["You bought " + str(quantityPurchased) + " " + newCommand[1] + "(s)!\nYour yield is now " + str(user['myYield']) + strBtc + strPerHour+ "\nYou now have " + str(round(user['money'], 3)) + strBtc + ".", ""]
+                    return ["Come back when you're a little mmmm...richer.", ""]
+                if itemInfo[2] == "upgrade":
+                    builtins.btcDB.update(user, money=user['money'] - (itemInfo[1] * quantity))
+                    builtins.btcDB.update(user, myYield=round(user['myYield'] + (itemInfo[3] * quantity), 3))
+                    builtins.btcDB.commit()
+                    return ["You bought " + str(quantityPurchased) + " " + newCommand[1] + "(s)!\nYour yield is now " + str(user['myYield']) + strBtc + strPerHour+ "\nYou now have " + str(round(user['money'], 3)) + strBtc + ".", ""]
+                elif itemInfo[2] == "consumable":
+                    if user['positiveYields'] == 0:
+                        builtins.btcDB.update(user, positiveMultiplier=itemInfo[3])
+                        builtins.btcDB.update(user, positiveYields=1)
+                        builtins.btcDB.commit()
+                        return ["You bought a " + newCommand[1] + ". Your next yield will be multiplied by " + str(itemInfo[3]) + ", making it " + str(floatRound(user['myYield'] * itemInfo[3])) + strBtc + ". You now have " + str(user['money']) + strBtc + ".", ""]
+                    else:
+                        return ["You already have a consumable active.", ""]
+                
             else:
                 return ["Invalid item name.", ""]
         else:

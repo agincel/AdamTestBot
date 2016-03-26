@@ -122,7 +122,11 @@ while running:
         #calculate BTC once per hour
         if currentTime.minute == 0: #it's the start of an hour
             for user in builtins.btcDB:
-                builtins.btcDB.update(user, money=round(user['money'] + user['myYield'], 3))
+                multiplier = 1
+                if user['positiveYields'] > 0:
+                    multiplier = user['positiveMultiplier']
+                    builtins.btcDB.update(user, positiveYields=int(user['positiveYields']) - 1)
+                builtins.btcDB.update(user, money=round(user['money'] + (user['myYield'] * multiplier), 3))
             builtins.btcDB.commit()
 
     previousTime = currentTime
