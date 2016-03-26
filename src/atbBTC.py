@@ -105,7 +105,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         elif itemName == "Chisel":
             info = ["Chisel", 75.0, "upgrade", 1.25]
         elif itemName == "Steroid":
-            info = ["Steroid", floatRound(getUser(currentMessage.from_user.id)['myYield'] * 0.8), "consumable", 1.5]
+            info = ["Steroid", floatRound(getUser(currentMessage.from_user.id)['myYield'] * 0.8), "consumable", 2]
         else:
             return []
         if info[2] == "upgrade":
