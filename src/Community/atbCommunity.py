@@ -12,7 +12,7 @@ import json
 import traceback
 import os
 import telegram
-#import psutil
+import psutil
 
 from .. import atbSendFunctions as atbSendFunctions
 from .. import atbMiscFunctions as atbMiscFunctions
@@ -152,7 +152,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 valueSuccessfullyChanged = False
 
                 try:
-                    pointsAdded = int(currentMessage.text.lower().split()[1])
+                    pointsAdded = float(currentMessage.text.lower().split()[1])
                 except (IndexError, ValueError):
                     pointsAdded = 1
 
