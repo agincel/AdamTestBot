@@ -19,8 +19,10 @@ from . import atbMiscFunctions
 
 def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge, btcInstanceArray):
     def sendText(givenText, replyingMessageID=0, keyboardLayout=[]):
-        if not chatInstanceArray[chat_id]['adminDisable']:
-            atbSendFunctions.sendText(bot, chat_id, givenText, replyingMessageID, keyboardLayout)
+        atbSendFunctions.sendText(bot, chat_id, givenText, replyingMessageID, keyboardLayout)
+
+    def sendTextTo(givenText, recipientMessageID):
+        atbSendFunctions.sendText(bot, recipientMessageID, givenText, 0, [])
 
     def sendPhoto(imageName):
         atbSendFunctions.sendPhoto(bot, chat_id, "images/" + imageName)
@@ -181,7 +183,18 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             builtins.btcDB.update(user, money=user['money'] - amount)
             builtins.btcDB.update(payToUser, money=payToUser['money'] + amount)
             builtins.btcDB.commit()
+            if int(payToUser['chat_id']) != 0:
+                sendTextTo(user['name'] + " paid you " + str(amount) + strBtc + ".", int(payToUser['chat_id']))
+            if int(user['chat_id']) != 0:
+                sendTextTo("You paid " + payToUser['name'] + " " + str(amount) + strBtc + ".", int(user['chat_id']))
             return [user['name'] + " has paid " + payToUser['name'] + " " + str(amount) + strBtc + ".", ""]
+
+    def updateUserChat(userID, chat_id):
+        for user in builtins.btcDB:
+            if int(user['id']) == int(userID) and int(chat_id) != int(user['chat_id']):
+                builtins.btcDB.update(user, chat_id=int(chat_id))
+                builtins.btcDB.commit()
+
 
 
     # -------- end helper function declarations ------- #
@@ -216,6 +229,9 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             print(newCommand)
         except:
             pass
+
+        updateUserChat(currentMessage.from_user.id, chat_id) # make sure we know their chat_id
+
         if newCommand[0] == "":
             return [getLedger(), "markdown"]
         elif newCommand[0] == "help":
@@ -228,11 +244,9 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             return buy(newCommand)
         elif newCommand[0] == "exit":
             return ["Bye!", ""]
-        elif newCommand[0] == "fix" and currentMessage.from_user.username == "AdamZG":
-            for user in builtins.btcDB:
-                if user['username'].find(".") != -1:
-                    builtins.btcDB.update(user, username=user['username'][0:user['username'].find(".")])
-            return ["Fixed up the database.", ""]
+        elif newCommand[0] == "commit" and currentMessage.from_user.username == "AdamZG":
+            builtins.btcDB.commit()
+            return ["Committed the BTC database.", ""]
         elif newCommand[0] == "remove":
             builtins.btcDB.delete(getUser(currentMessage.from_user.id))
             return["Sorry to see you go. :(", ""]
