@@ -52,11 +52,11 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         sortedK = sorted(K, key=lambda x: float(x[keyField]), reverse=True)
         for user in sortedK:
             outputString += user['username'] + " (" + user['name'] + ")\n\t" + str((round(user['money'], 3))) + strBtc + " - " 
-            if float(user['positiveMultiplier']) != 0:
+            if float(user['positiveYields']) > 0:
                 outputString += "(" + str(user['positiveMultiplier']) + "x) "
-            if float(user['zeroMultiplier']) == 0:
+            if float(user['zeroYields']) > 0:
                 outputString += "(0x) "
-            if float(user['negativeMultiplier']) != 0:
+            if float(user['negativeYields']) > 0:
                 outputString += "(" + str(user['negativeMultiplier']) + "x) "
 
             outputString += str(user['myYield']) + strBtc + "⁄hr\n"
