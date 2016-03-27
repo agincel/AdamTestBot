@@ -174,6 +174,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                     return ["You bought " + str(quantityPurchased) + " " + newCommand[1] + "(s)!\nYour yield is now " + str(user['myYield']) + strBtc + strPerHour+ "\nYou now have " + str(round(user['money'], 3)) + strBtc + ".", ""]
                 elif itemInfo[2] == "consumable":
                     if user['positiveYields'] == 0:
+                        builtins.btcDB.update(user, money=user['money'] - itemInfo[1])
                         builtins.btcDB.update(user, positiveMultiplier=itemInfo[3])
                         builtins.btcDB.update(user, positiveYields=1)
                         builtins.btcDB.commit()
