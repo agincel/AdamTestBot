@@ -266,7 +266,6 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         return [returnText, returnMessageType, keyboardLayout]
 
     def stock(newCommand):
-        return ["UNDER MAINTAINENCE SORRY", ""]
         user = getUser(currentMessage.from_user.id)
         if len(newCommand) > 1: #managing stock
             if len(newCommand) > 2: #actual buy or sell command has been sent
@@ -472,9 +471,9 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             elif newCommand[0] == "resetStocks":
                 defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
                 for user in builtins.btcDB:
-                    builtins.btcDB.update(user, stocks=defaultStockArray)
+                    builtins.btcDB.update(user, stocks=defaultStockArray.copy())
                 builtins.btcDB.commit()
-                return ["reset stocks?", ""]
+                return ["reset stocks. economies that exist: not ours", ""]
             elif newCommand[0] == "iS":
                 defineStocks()
                 return ["We did the stocks", ""]
@@ -488,9 +487,10 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                     updateStocks()
                 return ["Updated stocks " + str(i) + " times", ""]
             elif newCommand[0] == "give":
-                user = getUserByUsername("AdamZG")
-                builtins.btcDB.update(user, money=user['money'] + int(newCommand[1]))
-                return ["Here's " + newCommand[1] + strBtc, ""]
+                user = getUserByUsername(newCommand[1])
+                builtins.btcDB.update(user, money=user['money'] + int(newCommand[2]))
+                sendTextTo("Admin gave you " + newCommand[2] + strBtc, user['chat_id'])
+                return ["Wow, cheater.", ""]
 
     else:
         print("Not valid private chat command.")
