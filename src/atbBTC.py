@@ -273,6 +273,15 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         elif newCommand[0] == "commit" and currentMessage.from_user.username == "AdamZG":
             builtins.btcDB.commit()
             return ["Committed the BTC database.", ""]
+        elif newCommand[0] == "debug" and currentMessage.from_user.username == "AdamZG":
+            print(getUserByUsername("AdamZG")['stocks'])
+            return ["Printed the thing?", ""]
+        elif newCommand[0] == "migrate" and currentMessage.from_user.username == "AdamZG":
+            defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0}
+            for user in builtins.btcDB:
+                builtins.btcDB1.insert(user['id'], user['username'], user['name'], user['money'], user['myYield'], user['positiveMultiplier'], user['positiveYields'], user['zeroMultiplier'], user['zeroYields'], user['negativeMultiplier'], user['negativeYields'], user['chat_id'], defaultStockArray, {})
+            builtins.btcDB1.commit()
+            return ["Migrated.", ""]
         elif newCommand[0] == "remove":
             builtins.btcDB.delete(getUser(currentMessage.from_user.id))
             return["Sorry to see you go. :(", ""]
@@ -285,4 +294,4 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
 
 
 
-#('id', 'username', 'name', 'money', 'yield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id')
+#('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id')

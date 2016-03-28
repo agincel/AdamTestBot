@@ -64,8 +64,10 @@ builtins.groupsBlazed = list()
 builtins.blazeMessage = ""
 
 builtins.btcDB = Base('chatStorage/btc.pdl') #the path to the btc database
-builtins.btcDB.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', mode="open")
+builtins.btcDB.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', 'stocks', 'other', mode="open")
 
+builtins.btcDB1 = Base('chatStorage/btc1.pdl')
+builtins.btcDB1.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', 'stocks', 'other', mode="open")
 
 # END persistent blaze information
 
