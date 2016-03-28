@@ -299,7 +299,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 if result[1] == "markdown":
                     sendText(result[0], markdown=True)
                 elif result[1] == "keyboard":
-                    sendText(result[0], keyboardLayout=result[2])
+                    sendText(result[0], markdown=True, keyboardLayout=result[2])
                 elif result[1] == "no":
                     pass
                 else:

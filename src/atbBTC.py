@@ -40,6 +40,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
     strBtc = "Bt₵"
     strBotCoin = "Bot₵oin Beta"
     strPerHour = "⁄hr"
+    strPerShare = "⁄share"
 
     def floatRound(fuck):
         return round(fuck, 3)
@@ -74,6 +75,113 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 return user
         return None
 
+    def getStockBySymbol(sym):
+        for stock in builtins.btcStockDB:
+            if stock['letter'] == sym:
+                return stock
+        return None
+
+    def defineStocks():
+        #'name', 'description', 'letter', 'fullRange', 'subRangeSize', 'selectedSubRangeStart', 'currentValue', 'history', 'forecast'
+        haveDoneThis = False
+        for stock in builtins.btcStockDB:
+            if stock['letter'] == 'A':
+                haveDoneThis = True
+
+        if not haveDoneThis:
+            builtins.btcStockDB.insert("ATB Industrial Average", "The average of all other traded stocks.", 'A', [0,0], 0, 0, 10, [], True)
+            builtins.btcStockDB.insert("Blaze Corp.", "Legal in Colorado.", 'B', [-.2, 0], 0.23, 0, 4.20, [], True)
+            builtins.btcStockDB.insert("Consistent Co.", "A slow but safe investment.", 'C', [-0.05, 0.1], 0.05, 0, 12.25, [], True)
+            builtins.btcStockDB.insert("Deez Nutz Ltd.", "High risk, high reward.", 'D', [-1, 0], 1, -4, 30, [], True)
+            builtins.btcStockDB.insert("ScrubSoft Inc.", "/scrub 999999999", 'S', [-0.23, 0.15], 0.1, 0, 6.66, [], True)
+
+    def updateStocks():
+        stockValueTotal = 0
+        stockNum = 0
+        stockA = -1
+        for stock in builtins.btcStockDB:
+            if stock['letter'] != 'A':
+                stockNum += 1
+                stockValueTotal += stock['currentValue']
+                lowerBound = stock['selectedSubRangeStart']
+                builtins.btcStockDB.update(stock, selectedSubRangeStart=round(random.uniform(stock['fullRange'][0], stock['fullRange'][1]), 2))
+                upperBound = stock['subRangeSize'] + lowerBound
+                delta = round(random.uniform(lowerBound, upperBound), 2)
+                forecastUp = True
+                if abs(stock['selectedSubRangeStart']) > abs(stock['selectedSubRangeStart'] + stock['subRangeSize']):
+                    forecastUp = False
+                currentHistory = stock['history']
+
+                builtins.btcStockDB.update(stock, currentValue=round(max(stock['currentValue'] + delta, 2.5), 3))
+                builtins.btcStockDB.update(stock, forecast=forecastUp)
+
+                currentHistory.append(stock['currentValue'])
+                builtins.btcStockDB.update(stock, history=currentHistory)
+            else:
+                stockA = stock
+        currentHistory = stockA['history']
+        builtins.btcStockDB.update(stockA, currentValue=round((stockValueTotal / stockNum), 2))
+        currentHistory.append(stockA['currentValue'])
+        builtins.btcStockDB.update(stockA, history=currentHistory)
+        builtins.btcStockDB.commit()
+
+    def stockQuote():
+        outputString = "```\n" + strBotCoin + " Stock Quote:\n"
+        K = list()
+        for stock in builtins.btcStockDB:
+            K.append(stock)
+        sortedK = sorted(K, key=lambda x: x['letter'], reverse=False)
+        for stock in sortedK:
+            outputString += stock['name'] + "\n\t"
+            outputString += stock['description'] + "\n\t\t"
+            outputString += str(stock['currentValue']) + strBtc + " ["
+            if stock['letter'] == 'A':
+                outputString += "-"
+            elif stock['forecast']:
+                outputString += "↑"
+            else:
+                outputString += "↓"
+            outputString += "]\n"
+        return outputString + "--------------------\nType '/btc quote' for a quote, or go to '/btc shop' to buy/sell Stocks!```" 
+
+    def getPortfolio(dialog=False):
+        outputString = "```\nYour Stock Portfolio:\n"
+        user = getUser(currentMessage.from_user.id)
+        K = list()
+        for stock in builtins.btcStockDB:
+            K.append(stock)
+        sortedK = sorted(K, key=lambda x: x['letter'], reverse=False)
+        for stock in sortedK:
+            forecast = "↓"
+            if stock['letter'] == 'A':
+                forecast = "-"
+            elif stock['forecast']:
+                forecast = "↑"
+            outputString += stock['name'] + " (" + stock['letter'] + ") [" + forecast + "]\n\t"
+            outputString += str(stock['currentValue']) + strBtc + strPerShare + " - " + str(user['stocks'][stock['letter']]) + " (" + str(round(stock['currentValue'] * user['stocks'][stock['letter']], 2)) + ")\n"
+        if dialog:
+            return outputString + "--------------\nWhat Stock Symbol do you want to manage?```"
+        else:
+            return outputString + "```"
+
+    def getMe():
+        user = getUser(currentMessage.from_user.id)
+        outputString = "```\n"
+        outputString += user['username'] + " (" + user['name'] + ")\n\t"
+        outputString += str(floatRound(user['money'])) + strBtc + " - " + str(user['myYield']) + strBtc + strPerHour + "\n\n"
+        K = list()
+        for stock in builtins.btcStockDB:
+            K.append(stock)
+        sortedK = sorted(K, key=lambda x: x['letter'], reverse=False)
+        for stock in sortedK:
+            if user['stocks'][stock['letter']] > 0:
+                forecast = "↓"
+                if stock['forecast']:
+                    forecast = "↑"
+                outputString += stock['name'] + " (" + stock['letter'] + ") [" + forecast + "]\n\t"
+                outputString += str(stock['currentValue']) + strBtc + strPerShare + " - " + str(user['stocks'][stock['letter']]) + " (" + str(round(stock['currentValue'] * user['stocks'][stock['letter']], 2)) + ")\n"
+        return outputString + "```"
+
     def getHelp():
         outputString = "```\n" + strBotCoin + " Help:\n"
         outputString += "/btc        | Ledger sorted by yield\n"
@@ -81,6 +189,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         outputString += "/btc join   | Join the " + strBotCoin + " Ledger\n"
         outputString += "/btc intro  | Rules and description\n"
         outputString += "/btc shop   | Buy items\n"
+        outputString += "/btc quote  | Quote stocks\n"
         outputString += "/btc pay    | pay another user\n"
         outputString += "/btc remove | leave the game :("
 
@@ -123,7 +232,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             returnText = "Welcome to the shop! You have " + str(round(float(getUser(currentMessage.from_user.id)['money']), 3)) + strBtc + ".\n"
             returnText += "What kind of item do you want to buy?\n\n"
             returnText += "(Tip: you can type '/btc buy itemName x' where x is the number of that item you want)"
-            keyboardLayout = [["/btc shop upgrades"], ["/btc shop consumables"], ["/btc shop weapons"]]
+            keyboardLayout = [["/btc shop upgrades"], ["/btc shop consumables"], ["/btc shop weapons"], ["/btc shop stocks"]]
         else:
             if newCommand[1] == "upgrades":
                 returnText = "Upgrades! Page 1:\n"
@@ -141,11 +250,74 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 buy = "/btc buy "
                 keyboardLayout.append([buy + "Steroid"])
                 keyboardLayout.append(["/btc exit"])
+            elif newCommand[1] == "stocks":
+                returnText = getPortfolio(True)
+                prefix = "/btc stock "
+                keyboardLayout.append([prefix + "A"])
+                keyboardLayout.append([prefix + "B"])
+                keyboardLayout.append([prefix + "C"])
+                keyboardLayout.append([prefix + "D"])
+                keyboardLayout.append([prefix + "S"])
             else:
                 returnText = "Sorry! Not implemented yet."
                 returnMessageType = ""
-                
         return [returnText, returnMessageType, keyboardLayout]
+
+    def stock(newCommand):
+        user = getUser(currentMessage.from_user.id)
+        if len(newCommand) > 1: #managing stock
+            if len(newCommand) > 2: #actual buy or sell command has been sent
+                stock = getStockBySymbol(newCommand[1])
+                if newCommand[2] == "buy" and stock != None:
+                    print("We're buying!")
+                    quantityPurchased = 1
+                    try:
+                        quantityPurchased = int(newCommand[-1])
+                    except:
+                        pass
+                    if quantityPurchased < 0:
+                        quantityPurchased *= -1
+
+                    if stock['currentValue'] * quantityPurchased > float(user['money']):
+                        quantityPurchased = int(float(user['money'])/stock['currentValue'])
+                    if float(user['money']) < stock['currentValue'] * quantityPurchased or quantityPurchased == 0: #can't afford
+                        return ["I'm afraid you can't afford that.", ""]
+                    builtins.btcDB.update(user, money=user['money'] - (stock['currentValue'] * quantityPurchased))
+                    portfolio = user['stocks']
+                    portfolio[stock['letter']] += quantityPurchased
+                    builtins.btcDB.update(user, stocks=portfolio)
+                    builtins.btcDB.commit()
+                    return ["You bought " + str(quantityPurchased) + " shares of " + stock['name'] + " at " + str(stock['currentValue']) + strBtc + ". You now have " + str(user['stocks'][stock['letter']]) + " shares (" + str(floatRound(stock['currentValue'] * user['stocks'][stock['letter']])) + strBtc + ") in that stock.", ""]
+                elif newCommand[2] == "sell" and stock != None:
+                    quantitySold = 1
+                    try:
+                        quantitySold = int(newCommand[-1])
+                    except:
+                        pass
+                    if quantitySold < 0:
+                        quantitySold *= -1
+                    if quantitySold > user['stocks'][stock['letter']]:
+                        quantitySold = user['stocks'][stock['letter']]
+
+                    builtins.btcDB.update(user, money=floatRound(user['money'] + (stock['currentValue'] * quantitySold)))
+                    portfolio = user['stocks']
+                    portfolio[stock['letter']] -= quantitySold
+                    builtins.btcDB.update(user, stocks=portfolio)
+                    builtins.btcDB.commit()
+                    return ["You sold " + str(quantitySold) + " shares of " + stock['name'] + ", making " + str(floatRound(stock['currentValue'] * quantitySold)) + strBtc + ". You have " + str(user['stocks'][stock['letter']]) + " shares (" + str(floatRound(user['stocks'][stock['letter']] * stock['currentValue'])) + strBtc + ") left.", ""]
+                elif newCommand[2] == "history" and stock != None:
+                    return [stock['history'][max(0, len(stock['history']) - 24):-1] + [stock['history'][-1]], ""]
+                else:
+                    return ["Invalid stock symbol.", ""]
+            else:
+                keyboardLayout = []
+                message = "Would you like to buy or sell this stock, or view its history?"
+                keyboardLayout.append(["/btc stock " + newCommand[1] + " buy 1"])
+                keyboardLayout.append(["/btc stock " + newCommand[1] + " sell 1"])
+                keyboardLayout.append(["/btc stock " + newCommand[1] + " history"])
+                return [message, "keyboard", keyboardLayout]
+        else:
+            return ["Go to the shop to start buying stocks.", ""]
 
     def buy(newCommand):
         if len(newCommand) > 1: #buying something
@@ -174,7 +346,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                     return ["You bought " + str(quantityPurchased) + " " + newCommand[1] + "(s)!\nYour yield is now " + str(user['myYield']) + strBtc + strPerHour+ "\nYou now have " + str(round(user['money'], 3)) + strBtc + ".", ""]
                 elif itemInfo[2] == "consumable":
                     if user['positiveYields'] == 0:
-                        builtins.btcDB.update(user, money=user['money'] - itemInfo[1])
+                        builtins.btcDB.update(user, money=floatRound(user['money'] - itemInfo[1]))
                         builtins.btcDB.update(user, positiveMultiplier=itemInfo[3])
                         builtins.btcDB.update(user, positiveYields=1)
                         builtins.btcDB.commit()
@@ -268,23 +440,57 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             return shop(newCommand)
         elif newCommand[0] == "buy":
             return buy(newCommand)
+        elif newCommand[0] == "stock":
+            return stock(newCommand)
+        elif newCommand[0] == "portfolio":
+            return [getPortfolio(), "markdown"]
+        elif newCommand[0] == "me":
+            return [getMe(), "markdown"]
         elif newCommand[0] == "exit":
             return ["Bye!", ""]
-        elif newCommand[0] == "commit" and currentMessage.from_user.username == "AdamZG":
-            builtins.btcDB.commit()
-            return ["Committed the BTC database.", ""]
-        elif newCommand[0] == "debug" and currentMessage.from_user.username == "AdamZG":
-            print(getUserByUsername("AdamZG")['stocks'])
-            return ["Printed the thing?", ""]
-        elif newCommand[0] == "migrate" and currentMessage.from_user.username == "AdamZG":
-            defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0}
-            for user in builtins.btcDB:
-                builtins.btcDB1.insert(user['id'], user['username'], user['name'], user['money'], user['myYield'], user['positiveMultiplier'], user['positiveYields'], user['zeroMultiplier'], user['zeroYields'], user['negativeMultiplier'], user['negativeYields'], user['chat_id'], defaultStockArray, {})
-            builtins.btcDB1.commit()
-            return ["Migrated.", ""]
+        elif newCommand[0] == "quote":
+            return [stockQuote(), "markdown"]
         elif newCommand[0] == "remove":
             builtins.btcDB.delete(getUser(currentMessage.from_user.id))
             return["Sorry to see you go. :(", ""]
+        elif currentMessage.from_user.username == "AdamZG":
+            if newCommand[0] == "commit":
+                builtins.btcDB.commit()
+                return ["Committed the BTC database.", ""]
+            elif newCommand[0] == "debug":
+                print(getUserByUsername("AdamZG")['stocks'])
+                return ["Printed the thing?", ""]
+            elif newCommand[0] == "migrate":
+                defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
+                for user in builtins.btcDB:
+                    builtins.btcDB1.insert(user['id'], user['username'], user['name'], user['money'], user['myYield'], user['positiveMultiplier'], user['positiveYields'], user['zeroMultiplier'], user['zeroYields'], user['negativeMultiplier'], user['negativeYields'], user['chat_id'], defaultStockArray, {})
+                builtins.btcDB1.commit()
+                return ["Migrated.", ""]
+            elif newCommand[0] == "resetStocks":
+                defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
+                for user in builtins.btcDB:
+                    builtins.btcDB.update(user, stocks=defaultStockArray)
+                builtins.btcDB.commit()
+                return ["reset stocks?", ""]
+            elif newCommand[0] == "iS":
+                defineStocks()
+                return ["We did the stocks", ""]
+            elif newCommand[0] == "uS":
+                i = 1
+                try:
+                    i = int(newCommand[-1])
+                except:
+                    pass
+                for a in range(0, i):
+                    updateStocks()
+                return ["Updated stocks " + str(i) + " times", ""]
+            elif newCommand[0] == "give":
+                user = getUserByUsername("AdamZG")
+                builtins.btcDB.update(user, money=user['money'] + int(newCommand[1]))
+                return ["Here's " + newCommand[1] + strBtc, ""]
+
+
+
     else:
         print("Not valid private chat command.")
         return ["", "no"]

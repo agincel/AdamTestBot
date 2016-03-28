@@ -66,6 +66,9 @@ builtins.blazeMessage = ""
 builtins.btcDB = Base('chatStorage/btc.pdl') #the path to the btc database
 builtins.btcDB.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', 'stocks', 'other', mode="open")
 
+builtins.btcStockDB = Base('chatStorage/btcStock.pdl')
+builtins.btcStockDB.create('name', 'description', 'letter', 'fullRange', 'subRangeSize', 'selectedSubRangeStart', 'currentValue', 'history', 'forecast', mode="open")
+
 builtins.btcDB1 = Base('chatStorage/btc1.pdl')
 builtins.btcDB1.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', 'stocks', 'other', mode="open")
 
@@ -121,6 +124,7 @@ while running:
                 builtins.groupsBlazed = list(s)
                 for group in builtins.groupsBlazed:
                     atb.sendMessage(int(group), atbBlaze.blazesummary(datetime.datetime.now()))
+
         #calculate BTC once per hour
         if currentTime.minute == 0: #it's the start of an hour
             for user in builtins.btcDB:
@@ -130,6 +134,36 @@ while running:
                     builtins.btcDB.update(user, positiveYields=int(user['positiveYields']) - 1)
                 builtins.btcDB.update(user, money=round(user['money'] + (user['myYield'] * multiplier), 3))
             builtins.btcDB.commit()
+
+            #update stocks
+            stockValueTotal = 0
+            stockNum = 0
+            stockA = -1
+            for stock in builtins.btcStockDB:
+                if stock['letter'] != 'A':
+                    stockNum += 1
+                    stockValueTotal += stock['currentValue']
+                    lowerBound = stock['selectedSubRangeStart']
+                    builtins.btcStockDB.update(stock, selectedSubRangeStart=round(random.uniform(stock['fullRange'][0], stock['fullRange'][1]), 2))
+                    upperBound = stock['subRangeSize'] + lowerBound
+                    delta = round(random.uniform(lowerBound, upperBound), 2)
+                    forecastUp = True
+                    if abs(stock['selectedSubRangeStart']) > abs(stock['selectedSubRangeStart'] + stock['subRangeSize']):
+                        forecastUp = False
+                    currentHistory = stock['history']
+
+                    builtins.btcStockDB.update(stock, currentValue=round(max(stock['currentValue'] + delta, 2.5), 3))
+                    builtins.btcStockDB.update(stock, forecast=forecastUp)
+
+                    currentHistory.append(stock['currentValue'])
+                    builtins.btcStockDB.update(stock, history=currentHistory)
+                else:
+                    stockA = stock
+            currentHistory = stockA['history']
+            builtins.btcStockDB.update(stockA, currentValue=round((stockValueTotal / stockNum), 2))
+            currentHistory.append(stockA['currentValue'])
+            builtins.btcStockDB.update(stockA, history=currentHistory)
+            builtins.btcStockDB.commit()
 
     previousTime = currentTime
     gc.collect()
