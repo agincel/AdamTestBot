@@ -6,3 +6,4 @@ pydblite/utils/__pycache__/
 chatStorage/blaze.pdl
 chatStorage/btc.pdl
 *.pyc
+chatStorage/
