@@ -185,11 +185,13 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
     def getHelp():
         outputString = "```\n" + strBotCoin + " Help:\n"
         outputString += "/btc        | Ledger sorted by yield\n"
+        outputString += "/btc me     | Information about you\n"
         outputString += "/btc list   | Ledger sorted by money\n"
         outputString += "/btc join   | Join the " + strBotCoin + " Ledger\n"
         outputString += "/btc intro  | Rules and description\n"
         outputString += "/btc shop   | Buy items\n"
         outputString += "/btc quote  | Quote stocks\n"
+        outputString += "/btc portfolio | Your stocks\n"
         outputString += "/btc pay    | pay another user\n"
         outputString += "/btc remove | leave the game :("
 
@@ -488,8 +490,6 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 user = getUserByUsername("AdamZG")
                 builtins.btcDB.update(user, money=user['money'] + int(newCommand[1]))
                 return ["Here's " + newCommand[1] + strBtc, ""]
-
-
 
     else:
         print("Not valid private chat command.")
