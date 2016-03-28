@@ -266,6 +266,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         return [returnText, returnMessageType, keyboardLayout]
 
     def stock(newCommand):
+        return ["UNDER MAINTAINENCE SORRY", ""]
         user = getUser(currentMessage.from_user.id)
         if len(newCommand) > 1: #managing stock
             if len(newCommand) > 2: #actual buy or sell command has been sent
