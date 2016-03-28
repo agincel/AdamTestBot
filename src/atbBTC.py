@@ -168,7 +168,14 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         user = getUser(currentMessage.from_user.id)
         outputString = "```\n"
         outputString += user['username'] + " (" + user['name'] + ")\n\t"
-        outputString += str(floatRound(user['money'])) + strBtc + " - " + str(user['myYield']) + strBtc + strPerHour + "\n\n"
+        outputString += str(floatRound(user['money'])) + strBtc + " - " 
+        if float(user['positiveYields']) > 0:
+            outputString += "(" + str(user['positiveMultiplier']) + "x) "
+        if float(user['zeroYields']) > 0:
+            outputString += "(0x) "
+        if float(user['negativeYields']) > 0:
+            outputString += "(" + str(user['negativeMultiplier']) + "x) "
+        outputString += str(user['myYield']) + strBtc + strPerHour + "\n\n"
         K = list()
         for stock in builtins.btcStockDB:
             K.append(stock)
