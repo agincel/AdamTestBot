@@ -138,7 +138,7 @@ while running:
                 if user['negativeYields'] > 0:
                     multiplier *= user['negativeMultiplier']
                     builtins.btcDB.update(user, negativeYields=int(user['negativeYields']) - 1)
-                builtins.btcDB.update(user, money=round(user['money'] + (user['myYield'] * multiplier), 3))
+                builtins.btcDB.update(user, money=max(round(user['money'] + (user['myYield'] * multiplier), 3), 0))
             builtins.btcDB.commit()
 
             #update stocks

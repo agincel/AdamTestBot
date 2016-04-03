@@ -184,7 +184,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 name += " " + currentMessage.from_user.last_name[0].upper() + "."
             except:
                 pass
-            if messageText != "/lobby show":
+            if messageText == "/lobby":
                 if [name, currentMessage.from_user.id] in chatInstanceArray[chat_id]['lobbyList']:
                     chatInstanceArray[chat_id]['lobbyList'].remove([name, currentMessage.from_user.id])
                 else:

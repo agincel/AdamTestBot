@@ -273,7 +273,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
 
     def shop(newCommand):
         returnText = ""
-        returnMessageType = "keyboard"
+        returnMessageType = "keyboardnm"
         keyboardLayout = []
         if len(newCommand) == 1:
             returnText = "Welcome to the shop! You have " + str(round(float(getUser(currentMessage.from_user.id)['money']), 3)) + strBtc + ".\n"
@@ -374,7 +374,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 keyboardLayout.append(["/btc stock " + newCommand[1] + " buy 1"])
                 keyboardLayout.append(["/btc stock " + newCommand[1] + " sell 1"])
                 keyboardLayout.append(["/btc stock " + newCommand[1] + " history"])
-                return [message, "keyboard", keyboardLayout]
+                return [message, "keyboardnm", keyboardLayout]
         else:
             return ["Go to the shop to start buying stocks.", ""]
 
