@@ -52,7 +52,15 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             K.append(user)
         sortedK = sorted(K, key=lambda x: float(x[keyField]), reverse=True)
         for user in sortedK:
-            outputString += user['username'] + " (" + user['name'] + ")\n\t" + str((round(user['money'], 3))) + strBtc + " - "
+            outputString += user['username'] + " (" + user['name'] + ")"
+            try:
+                sym = user['other']['alliance']
+                if sym != "":
+                    outputString += " [" + sym + "]"
+            except:
+                pass
+            outputString += "\n\t"
+            outputString += str((round(user['money'], 3))) + strBtc + " - "
             if float(user['positiveYields']) > 0:
                 outputString += "(" + str(user['positiveMultiplier']) + "x) "
             if float(user['zeroYields']) > 0:
@@ -187,14 +195,21 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             outputString += stock['name'] + " (" + stock['letter'] + ") [" + forecast + "]\n\t"
             outputString += str(stock['currentValue']) + strBtc + strPerShare + " - " + str(user['stocks'][stock['letter']]) + " (" + str(round(stock['currentValue'] * user['stocks'][stock['letter']], 2)) + ")\n"
         if dialog:
-            return outputString + "--------------\nWhat Stock Symbol do you want to manage?```"
+            return outputString + "--------------\nWhat Stock Symbol do you want to manage?```\nYou currently have " + str(floatRound(user['money'])) + strBtc
         else:
             return outputString + "```"
 
     def getMe():
         user = getUser(currentMessage.from_user.id)
         outputString = "```\n"
-        outputString += user['username'] + " (" + user['name'] + ")\n\t"
+        outputString += user['username'] + " (" + user['name'] + ")"
+        try:
+            sym = user['other']['alliance']
+            if sym != "":
+                outputString += " [" + sym + "]"
+        except:
+            pass
+        outputString += "\n\t"
         outputString += str(floatRound(user['money'])) + strBtc + " - "
         if float(user['positiveYields']) > 0:
             outputString += "(" + str(user['positiveMultiplier']) + "x) "
@@ -225,7 +240,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         outputString += "/btc intro  | Rules and description\n"
         outputString += "/btc shop   | Buy items\n"
         outputString += "/btc quote  | Quote stocks\n"
-        outputString += "/btc portfolio | Your stocks\n"
+        outputString += "/btc alliance | Enter an alliance\n"
         outputString += "/btc pay    | pay another user\n"
         outputString += "/btc remove | leave the game :("
 
@@ -235,8 +250,8 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         outputString = "Welcome to " + strBotCoin + "!\n\n"
         outputString += "This game is a progression game, in the vein of Cookie Clicker or Bitcoin Billionaire.\n"
         outputString += "Every hour, on the hour, your yield is added to your total. You start with 1.0" + strBtc + " and a yield of 0.1" + strBtc + " per hour.\n"
-        outputString += "Typing '/btc shop' will let you browse the shop, and will let you buy permanent upgrades, consumable boosts, or weapons to attack others."
-
+        outputString += "Typing '/btc shop' will let you browse the shop, and will let you buy permanent upgrades, consumable boosts, or weapons to attack others.\n"
+        outputString += "There's also a stock market; various stocks fluctuate up and down and can help you turn your money into more money! You can find the stock market through the shop. Happy investing!"
         return outputString
 
     def getItemInfo(itemName):
@@ -310,6 +325,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 keyboardLayout.append([prefix + "D"])
                 keyboardLayout.append([prefix + "S"])
                 keyboardLayout.append(["/btc exit"])
+                returnMessageType = "keyboard"
             elif newCommand[1] == "weapons":
                 returnText = "Out to deal some damage, eh?\n"
                 returnText += getItemInfo("Hammer")[0] + "\n"
@@ -518,8 +534,6 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 builtins.btcDB.update(user, chat_id=int(chat_id))
                 builtins.btcDB.commit()
 
-
-
     # -------- end helper function declarations ------- #
 
     if newCommand[0] == '' and int(chat_id) < 0:
@@ -576,6 +590,26 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             return ["Bye!", ""]
         elif newCommand[0] == "quote":
             return [stockQuote(), "markdown"]
+        elif newCommand[0] == "alliance":
+            hasAlliance = False
+            try:
+                hasAlliance = newCommand[1] != ""
+            except:
+                pass
+            if not hasAlliance:
+                return ["Usage: '/btc alliance [Symbol]'\nType '/btc alliance remove' or '/btc alliance leave' to leave an alliance.", ""]
+            sym = newCommand[1][0:3].upper()
+            user = getUser(currentMessage.from_user.id)
+            o = user['other']
+            if newCommand[1] == "remove" or newCommand[1] == "leave":
+                o['alliance'] = ""
+                builtins.btcDB.update(user, other=o)
+                builtins.btcDB.commit()
+                return ["You have left your alliance.", ""]
+            o['alliance'] = sym
+            builtins.btcDB.update(user, other=o)
+            builtins.btcDB.commit()
+            return ["You are now part of the " + sym + " alliance.", ""]
         elif newCommand[0] == "remove":
             builtins.btcDB.delete(getUser(currentMessage.from_user.id))
             return["Sorry to see you go. :(", ""]
