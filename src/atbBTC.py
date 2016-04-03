@@ -337,7 +337,6 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                         pass
                     if quantityPurchased < 0:
                         quantityPurchased *= -1
-
                     if stock['currentValue'] * quantityPurchased > float(user['money']):
                         quantityPurchased = int(float(user['money'])/stock['currentValue'])
                     if float(user['money']) < stock['currentValue'] * quantityPurchased or quantityPurchased == 0: #can't afford
@@ -427,22 +426,25 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                         pass
 
                     if target == "":
-                        outputString = "You want a " + newCommand[1] + "? Select a target."
+                        outputString = "\n```\nYou want a " + newCommand[1] + "? Select a target."
                         if itemInfo[4] < 0:
-                            outputString += " (Just know, you can't bring anyone's balance below 0" + strBtc + ".)"
+                            outputString += " (Just know, you can't bring anyone's balance below 0" + strBtc + ".)\n"
                         keyboardLayout = []
                         prefix = "/btc buy "
                         keyboardLayout.append(["/btc exit"])
                         for userA in builtins.btcDB:
                             if user['username'] != userA['username']:
+                                outputString += userA['username'] + " (" + userA['name'] + ")\n\t" + str(userA['money']) + strBtc + " - " + str(userA['myYield']) + strBtc + strPerHour + ": "
+                                outputString += str(floatRound(userA['myYield'] * float(itemInfo[3]))) + strBtc + "\n"
                                 keyboardLayout.append([prefix + newCommand[1] + " " + userA['username']])
+                        outputString += "```"
                         return [outputString, "keyboard", keyboardLayout]
                     elif target != "yes" and target != "" and not isConfirming:
                         targetUser = getUserByUsername(newCommand[2])
                         if targetUser == None:
                             return ["How are you going to use a weapon on someone who doesn't exist?", ""]
                         cost = floatRound(targetUser['myYield'] * float(itemInfo[3]))
-                        outputString = "You want to use a " + newCommand[1] + " on " + newCommand[2] + "? That's going to cost you " + str(cost) + strBtc + ". You sure?"
+                        outputString = "You want to use a " + newCommand[1] + " on " + newCommand[2] + "?\nThat's going to cost you " + str(cost) + strBtc + ".\nYou sure?"
                         keyboardLayout = []
                         keyboardLayout.append(["/btc buy " + newCommand[1] + " " + newCommand[2] + " yes"])
                         keyboardLayout.append(["/btc exit"])
