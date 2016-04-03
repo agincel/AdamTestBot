@@ -12,7 +12,10 @@ import json
 import traceback
 import os
 import telegram
-import psutil
+try:
+    import psutil
+except:
+    pass
 
 from .. import atbSendFunctions as atbSendFunctions
 from .. import atbMiscFunctions as atbMiscFunctions

@@ -150,7 +150,7 @@ def blazePM(time_received, currentMessage):
                 #handle top three#
                 builtins.blazeList.append(currentMessage.from_user.id)
 
-                upperBound = min(firstRange, len(builtins.blazeList))
+                upperBound = 3#min(firstRange, len(builtins.blazeList))
 
                 if currentMessage.from_user.id in builtins.blazeList[0:upperBound]: #if is in first three
                     topThree = True
@@ -201,7 +201,7 @@ def blazePM(time_received, currentMessage):
         except:
             pass
         builtins.blazeList.append(currentMessage.from_user.id)
-        upperBound = min(firstRange, len(builtins.blazeList))
+        upperBound = 3#min(firstRange, len(builtins.blazeList))
         if currentMessage.from_user.id in builtins.blazeList[0:upperBound]: #if is in first three
             topThree = True
             pointsReceivedFromTopThree = 1

@@ -52,7 +52,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             K.append(user)
         sortedK = sorted(K, key=lambda x: float(x[keyField]), reverse=True)
         for user in sortedK:
-            outputString += user['username'] + " (" + user['name'] + ")\n\t" + str((round(user['money'], 3))) + strBtc + " - " 
+            outputString += user['username'] + " (" + user['name'] + ")\n\t" + str((round(user['money'], 3))) + strBtc + " - "
             if float(user['positiveYields']) > 0:
                 outputString += "(" + str(user['positiveMultiplier']) + "x) "
             if float(user['zeroYields']) > 0:
@@ -87,13 +87,40 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         for stock in builtins.btcStockDB:
             if stock['letter'] == 'A':
                 haveDoneThis = True
-
         if not haveDoneThis:
             builtins.btcStockDB.insert("ATB Industrial Average", "The average of all other traded stocks.", 'A', [0,0], 0, 0, 10, [], True)
             builtins.btcStockDB.insert("Blaze Corp.", "Legal in Colorado.", 'B', [-.2, 0], 0.23, 0, 4.20, [], True)
             builtins.btcStockDB.insert("Consistent Co.", "A slow but safe investment.", 'C', [-0.05, 0.1], 0.05, 0, 12.25, [], True)
             builtins.btcStockDB.insert("Deez Nutz Ltd.", "High risk, high reward.", 'D', [-1, 0], 1, -4, 30, [], True)
             builtins.btcStockDB.insert("ScrubSoft Inc.", "/scrub 999999999", 'S', [-0.23, 0.15], 0.1, 0, 6.66, [], True)
+
+    def getStockInfo(sym):
+        stock = getStockBySymbol(sym)
+        outputString = "Stock " + sym + ":\n"
+        outputString += "Name: " + stock['name'] + "\n"
+        outputString += "Desc: " + stock['description'] + "\n"
+        outputString += "Symbol: " + stock['letter'] + "\n"
+        outputString += "Full Range: " + str(stock['fullRange']) + '\n'
+        outputString += "subRangeSize: " + str(stock['subRangeSize']) + '\n'
+        outputString += "Current Subrange Start: " + str(stock['selectedSubRangeStart']) + '\n'
+        outputString += "Current Value: " + str(stock['currentValue']) + '\n'
+        outputString += "Forecast: " + str(stock['forecast']) + '\n'
+        totalOut = 0
+        for user in builtins.btcDB:
+            totalOut += user['stocks'][sym]
+        outputString += "Total Sold: " + str(totalOut) + '\n'
+        return [outputString, ""]
+
+    def updateStockRange(sym, low, high):
+        stock = getStockBySymbol(sym)
+        newRange = [low, high]
+        builtins.btcStockDB.update(stock, fullRange=newRange)
+        return ["Set Stock " + sym + "'s Range to " + str(newRange), ""]
+
+    def updateStockRangeSize(sym, size):
+        stock = getStockBySymbol(sym)
+        builtins.btcStockDB.update(stock, subRangeSize=size)
+        return ["Set Stock " + sym + "'s subRangeSize to " + str(size), ""]
 
     def updateStocks():
         stockValueTotal = 0
@@ -142,7 +169,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             else:
                 outputString += "↓"
             outputString += "]\n"
-        return outputString + "--------------------\nType '/btc quote' for a quote, or go to '/btc shop' to buy/sell Stocks!```" 
+        return outputString + "--------------------\nType '/btc quote' for a quote, or go to '/btc shop' to buy/sell Stocks!```"
 
     def getPortfolio(dialog=False):
         outputString = "```\nYour Stock Portfolio:\n"
@@ -168,7 +195,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         user = getUser(currentMessage.from_user.id)
         outputString = "```\n"
         outputString += user['username'] + " (" + user['name'] + ")\n\t"
-        outputString += str(floatRound(user['money'])) + strBtc + " - " 
+        outputString += str(floatRound(user['money'])) + strBtc + " - "
         if float(user['positiveYields']) > 0:
             outputString += "(" + str(user['positiveMultiplier']) + "x) "
         if float(user['zeroYields']) > 0:
@@ -186,7 +213,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 if stock['forecast']:
                     forecast = "↑"
                 outputString += stock['name'] + " (" + stock['letter'] + ") [" + forecast + "]\n\t"
-                outputString += str(stock['currentValue']) + strBtc + strPerShare + " - " + str(user['stocks'][stock['letter']]) + " (" + str(round(stock['currentValue'] * user['stocks'][stock['letter']], 2)) + ")\n"
+                outputString += str(stock['currentValue']) + strBtc + strPerShare + " - " + str(user['stocks'][stock['letter']]) + " (" + str(round(stock['currentValue'] * user['stocks'][stock['letter']], 2)) + strBtc + ")\n"
         return outputString + "```"
 
     def getHelp():
@@ -222,14 +249,25 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             info = ["Q-Tip", 0.1, "upgrade", 0.001]
         elif itemName == "Chisel":
             info = ["Chisel", 75.0, "upgrade", 1.25]
+        elif itemName == "Pickaxe":
+            info = ["Pickaxe", 200.0, "upgrade", 3.5]
+        elif itemName == "Jackhammer":
+            info = ["Pickaxe", 2500.0, "upgrade", 50]
         elif itemName == "Steroid":
             info = ["Steroid", floatRound(getUser(currentMessage.from_user.id)['myYield'] * 0.8), "consumable", 2]
+        elif itemName == "Hammer":
+            info = ["Hammer", "1.1x Target's Yield", "weapon", 1.1, 0]
+        elif itemName == "Crowbar":
+            info = ["Crowbar", "1.5x Target's Yield", "weapon", 1.5, -0.5]
         else:
             return []
         if info[2] == "upgrade":
             return [info[0] + " (+" + str(round(float(info[3]), 3)) + " " + strPerHour + "): " + str(floatRound(float(info[1]))) + strBtc + "\n", info[1], info[2], info[3]]
         elif info[2] == "consumable":
             return [info[0] + " (yield x" + str(info[3]) + "): " + str(info[1]) + strBtc + "\n", info[1], info[2], info[3]]
+        elif info[2] == "weapon":
+            outputString = info[0] + " (yield x " + str(info[4]) + "): " + info[1]
+            return [outputString, info[1], info[2], info[3], info[4]] #desc, useless, category, multiplier, effect
         else:
             return []
 
@@ -241,17 +279,21 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             returnText = "Welcome to the shop! You have " + str(round(float(getUser(currentMessage.from_user.id)['money']), 3)) + strBtc + ".\n"
             returnText += "What kind of item do you want to buy?\n\n"
             returnText += "(Tip: you can type '/btc buy itemName x' where x is the number of that item you want)"
-            keyboardLayout = [["/btc shop upgrades"], ["/btc shop consumables"], ["/btc shop weapons"], ["/btc shop stocks"]]
+            keyboardLayout = [["/btc shop\nupgrades", "/btc shop\nconsumables"], ["/btc shop\nweapons", "/btc shop\nstocks"], ["/btc exit"]]
         else:
             if newCommand[1] == "upgrades":
                 returnText = "Upgrades! Page 1:\n"
                 returnText += getItemInfo("Q-Tip")[0]
                 returnText += getItemInfo("Toothpick")[0]
                 returnText += getItemInfo("Chisel")[0]
+                returnText += getItemInfo("Pickaxe")[0]
+                returnText += getItemInfo("Jackhammer")[0]
                 buy = "/btc buy "
                 keyboardLayout.append([buy + "Q-Tip 1"])
                 keyboardLayout.append([buy + "Toothpick 1"])
                 keyboardLayout.append([buy + "Chisel 1"])
+                keyboardLayout.append([buy + "Pickaxe 1"])
+                keyboardLayout.append([buy + "Jackhammer 1"])
                 keyboardLayout.append(["/btc exit"])
             elif newCommand[1] == "consumables":
                 returnText = "Consumables! Page 1:\n"
@@ -267,6 +309,15 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 keyboardLayout.append([prefix + "C"])
                 keyboardLayout.append([prefix + "D"])
                 keyboardLayout.append([prefix + "S"])
+                keyboardLayout.append(["/btc exit"])
+            elif newCommand[1] == "weapons":
+                returnText = "Out to deal some damage, eh?\n"
+                returnText += getItemInfo("Hammer")[0] + "\n"
+                returnText += getItemInfo("Crowbar")[0]
+                prefix = "/btc buy "
+                keyboardLayout.append([prefix + "Hammer"])
+                keyboardLayout.append([prefix + "Crowbar"])
+                keyboardLayout.append(["/btc exit"])
             else:
                 returnText = "Sorry! Not implemented yet."
                 returnMessageType = ""
@@ -338,16 +389,16 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 pass
             if quantity < 0:
                 quantity *= -1
-
             quantityPurchased = 0
             if itemInfo != []:
                 user = getUser(currentMessage.from_user.id)
-                if float(itemInfo[1]) * quantity > float(user['money']):
-                    quantity = int(float(user['money'])/float(itemInfo[1]))
-                if float(user['money']) >= float(itemInfo[1]) * quantity and quantity != 0: #can afford
-                    quantityPurchased = quantity
-                else:
-                    return ["Come back when you're a little mmmm...richer.", ""]
+                if itemInfo[2] != "weapon":
+                    if float(itemInfo[1]) * quantity > float(user['money']):
+                        quantity = int(float(user['money'])/float(itemInfo[1]))
+                    if float(user['money']) >= float(itemInfo[1]) * quantity and quantity != 0: #can afford
+                        quantityPurchased = quantity
+                    else:
+                        return ["Come back when you're a little mmmm...richer.", ""]
                 if itemInfo[2] == "upgrade":
                     builtins.btcDB.update(user, money=user['money'] - (itemInfo[1] * quantity))
                     builtins.btcDB.update(user, myYield=round(user['myYield'] + (itemInfo[3] * quantity), 3))
@@ -362,7 +413,65 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                         return ["You bought a " + newCommand[1] + ". Your next yield will be multiplied by " + str(itemInfo[3]) + ", making it " + str(floatRound(user['myYield'] * itemInfo[3])) + strBtc + ". You now have " + str(user['money']) + strBtc + ".", ""]
                     else:
                         return ["You already have a consumable active.", ""]
-                
+                elif itemInfo[2] == "weapon":
+                    isConfirming = False
+                    target = ""
+                    try:
+                        isConfirming = newCommand[3] == "yes"
+                    except:
+                        pass
+
+                    try:
+                        target = newCommand[2]
+                    except:
+                        pass
+
+                    if target == "":
+                        outputString = "You want a " + newCommand[1] + "? Select a target."
+                        if itemInfo[4] < 0:
+                            outputString += " (Just know, you can't bring anyone's balance below 0" + strBtc + ".)"
+                        keyboardLayout = []
+                        prefix = "/btc buy "
+                        keyboardLayout.append(["/btc exit"])
+                        for userA in builtins.btcDB:
+                            if user['username'] != userA['username']:
+                                keyboardLayout.append([prefix + newCommand[1] + " " + userA['username']])
+                        return [outputString, "keyboard", keyboardLayout]
+                    elif target != "yes" and target != "" and not isConfirming:
+                        targetUser = getUserByUsername(newCommand[2])
+                        if targetUser == None:
+                            return ["How are you going to use a weapon on someone who doesn't exist?", ""]
+                        cost = floatRound(targetUser['myYield'] * float(itemInfo[3]))
+                        outputString = "You want to use a " + newCommand[1] + " on " + newCommand[2] + "? That's going to cost you " + str(cost) + strBtc + ". You sure?"
+                        keyboardLayout = []
+                        keyboardLayout.append(["/btc buy " + newCommand[1] + " " + newCommand[2] + " yes"])
+                        keyboardLayout.append(["/btc exit"])
+                        return [outputString, "keyboard", keyboardLayout]
+                    elif isConfirming:
+                        targetUser = getUserByUsername(newCommand[2])
+                        cost = floatRound(targetUser['myYield'] * float(itemInfo[3]))
+                        effect = itemInfo[4]
+                        if targetUser == None:
+                            return ["How are you going to use a weapon on someone who doesn't exist?", ""]
+                        elif targetUser['username'] == user['username']:
+                            return ["Sorry, I'm not going to let you use a weapon on yourself.", ""]
+                        elif cost > user['money']:
+                            return ["Why are you looking to attack others when you're so poor yourself?", ""]
+
+                        builtins.btcDB.update(user, money=floatRound(user['money'] - cost))
+                        if effect == 0:
+                            if targetUser['zeroYields'] > 0:
+                                return ["They've already had their yield set to 0 this hour.", ""]
+                            builtins.btcDB.update(targetUser, zeroYields=1)
+                        elif effect <= 0:
+                            if targetUser['negativeYields'] > 0:
+                                return ["They've already had their yield set negative this hour.", ""]
+                            builtins.btcDB.update(targetUser, negativeYields=1)
+                            builtins.btcDB.update(targetUser, negativeMultiplier=effect)
+                        builtins.btcDB.commit()
+                        if int(targetUser['chat_id']) != 0:
+                            sendTextTo(user['name'] + " attacked you with a " + newCommand[1] + "!", int(targetUser['chat_id']))
+                        return ["You attacked " + targetUser['name'] + " with a " + newCommand[1] + ".", ""]
             else:
                 return ["Invalid item name.", ""]
         else:
@@ -412,6 +521,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         return [getLedger("money"), "markdown"]
     elif newCommand[0] == "join":
         if getUser(currentMessage.from_user.id) == None:
+            defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
             username = currentMessage.from_user.username
             if username == "":
                 username = currentMessage.from_user.first_name + str(int(currentMessage.from_user.id / 100000))
@@ -422,7 +532,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 name += " " + userLastInitial
             except:
                 pass
-            builtins.btcDB.insert(currentMessage.from_user.id, username, name, 1.0, 0.1, 0, 0, -1, 0, 0, 0, 000000)
+            builtins.btcDB.insert(currentMessage.from_user.id, username, name, 1.0, 0.1, 0, 0, -1, 0, 0, 0, 000000, defaultStockArray, {})
             builtins.btcDB.commit()
             return [name + " has joined " + strBotCoin + "!\nType '/btc help' in a private chat with me to get started.", ""]
         else:
@@ -491,6 +601,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 except:
                     pass
                 for a in range(0, i):
+                    print(a)
                     updateStocks()
                 return ["Updated stocks " + str(i) + " times", ""]
             elif newCommand[0] == "give":
@@ -498,6 +609,12 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 builtins.btcDB.update(user, money=user['money'] + int(newCommand[2]))
                 sendTextTo("Admin gave you " + newCommand[2] + strBtc, user['chat_id'])
                 return ["Wow, cheater.", ""]
+            elif newCommand[0] == "updateStockRange":
+                return updateStockRange(newCommand[1], float(newCommand[2]), float(newCommand[3]))
+            elif newCommand[0] == "updateStockRangeSize":
+                return updateStockRangeSize(newCommand[1], float(newCommand[2]))
+            elif newCommand[0] == "getStockInfo":
+                return getStockInfo(newCommand[-1])
 
     else:
         print("Not valid private chat command.")

@@ -132,6 +132,12 @@ while running:
                 if user['positiveYields'] > 0:
                     multiplier = user['positiveMultiplier']
                     builtins.btcDB.update(user, positiveYields=int(user['positiveYields']) - 1)
+                if user['zeroYields'] > 0:
+                    multiplier *= 0
+                    builtins.btcDB.update(user, zeroYields=int(user['zeroYields']) - 1)
+                if user['negativeYields'] > 0:
+                    multiplier *= user['negativeMultiplier']
+                    builtins.btcDB.update(user, negativeYields=int(user['negativeYields']) - 1)
                 builtins.btcDB.update(user, money=round(user['money'] + (user['myYield'] * multiplier), 3))
             builtins.btcDB.commit()
 
