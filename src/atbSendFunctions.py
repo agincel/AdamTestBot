@@ -17,7 +17,6 @@ def sendText(bot, chat_id, messageText, replyingMessageID=0, keyboardLayout=[], 
     if replyingMessageID != 0:
         bot.sendMessage(chat_id=chat_id, text=messageText, reply_to_message_id=replyingMessageID, reply_markup=telegram.ReplyKeyboardHide(hide_keyboard=killkeyboard))
     elif keyboardLayout != []:
-        print("tried sending keyboard")
         if markdown:
             bot.sendMessage(chat_id=chat_id, text=messageText, parse_mode="Markdown", reply_markup=telegram.ReplyKeyboardMarkup(keyboard=keyboardLayout, one_time_keyboard=True, resize_keyboard=True))
         else:
