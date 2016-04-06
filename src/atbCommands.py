@@ -78,7 +78,10 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     elif messageText.lower().split()[1] == "blaze":
                         bot.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
                     elif messageText.lower().split()[1] == "update":
-                        atbFirebase.update()
+                        try:
+                            atbFirebase.update()
+                        except:
+                            print(traceback.format_exc())
                         sendText("Site updated.")
                 except Exception:
                     pass
