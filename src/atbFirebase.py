@@ -7,7 +7,6 @@ def update():
     btcLedger = []
     stocks = []
     K = list()
-    print("Now for blaze DB")
     for user in builtins.blazeDB:
         K.append(user)
     sortedK = sorted(K, key=lambda x: int(x['score']), reverse=True)
@@ -17,9 +16,8 @@ def update():
             scoreStr += "+ "
         if user['streak'] > 1:
             scoreStr += "(" + str(user['streak']) + ") "
-        blazeDb.append(scoreStr + [user['name'], user['score']])
+        blazeDb.append([scoreStr + user['name'], user['score']])
     K = list()
-    print("Now for btcDB")
     for user in builtins.btcDB:
         K.append(user)
     sortedK = sorted(K, key=lambda x: float(x['myYield']), reverse=True)
@@ -33,7 +31,6 @@ def update():
             yieldStr += "(0x) "
         yieldStr += str(user['myYield'])
         btcLedger.append([user['name'], round(user['money'], 3), yieldStr])
-    print("Now, stocks")
     for stock in builtins.btcStockDB:
         stocks.append([stock['name'], stock['currentValue']])
     allInfo = {'blazeDb': blazeDb, 'btcLedger': btcLedger, 'stocks': stocks}
