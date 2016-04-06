@@ -175,7 +175,7 @@ while running:
             try:
                 atbFirebase.update()
             except:
-                pass
+                print(traceback.format_exc())
 
     previousTime = currentTime
     gc.collect()
