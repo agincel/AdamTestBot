@@ -30,7 +30,13 @@ def update():
         if user['zeroYields'] > 0:
             yieldStr += "(0x) "
         yieldStr += str(user['myYield'])
-        btcLedger.append([user['name'], round(user['money'], 3), yieldStr])
+        alliance = ""
+        try:
+            if user['other']['alliance'] != "":
+                alliance += " (" + user['other']['alliance'] + ")"
+        except:
+            pass
+        btcLedger.append([user['name'] + alliance, round(user['money'], 3), yieldStr])
     for stock in builtins.btcStockDB:
         stocks.append([stock['name'], stock['currentValue']])
     allInfo = {'blazeDb': blazeDb, 'btcLedger': btcLedger, 'stocks': stocks}
