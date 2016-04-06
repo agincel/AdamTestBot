@@ -661,9 +661,4 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
         print("Not valid private chat command.")
         return ["", "no"]
 
-
-
-
-
-
 #('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id')

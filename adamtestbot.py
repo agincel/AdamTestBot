@@ -17,6 +17,7 @@ import builtins #I'm so sorry
 from pydblite import Base #The PyDbLite stuff
 
 import src.atbCommands as atbCommands
+import src.atbFirebase as atbFirebase
 from src.atbCommands import atbBlaze
 
 APIKEY = ''
@@ -29,7 +30,7 @@ atb = telegram.Bot(token=APIKEY)
 updates = {}
 currentMessage = {}
 
-print("@AdamTestBot 3.5 - Ready to go!")
+print("@AdamTestBot 3.95 - Ready to go!")
 print("Written by Adam Gincel, rewritten by Matt Gomez, shoutouts to Smesh, SG(DC)^2, and Meth Jelly.")
 
 newestOffset = 0
@@ -108,7 +109,7 @@ while running:
                 print("Welp, something went wrong...")
 
     currentTime = datetime.datetime.now().time()
-    if previousTime.minute != currentTime.minute:
+    if previousTime.minute != currentTime.minute: # a minute has passed
         if currentTime.hour == 16 and currentTime.minute == 19: #reset for PM blaze
             K = list()
             for user in builtins.blazeDB:
@@ -170,6 +171,11 @@ while running:
             currentHistory.append(stockA['currentValue'])
             builtins.btcStockDB.update(stockA, history=currentHistory)
             builtins.btcStockDB.commit()
+        if (currentTime.minute % 5) == 0:
+            try:
+                atbFirebase.update()
+            except:
+                pass
 
     previousTime = currentTime
     gc.collect()

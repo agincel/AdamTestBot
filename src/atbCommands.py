@@ -17,6 +17,7 @@ from . import atbAdLib
 from . import atbLikes
 from . import atbBlaze
 from . import atbBTC
+from . import atbFirebase
 from .Community import atbCommunity as atbCommunity
 
 from pydblite import Base #The PyDbLite stuff
@@ -64,7 +65,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             btcInstanceArray[chat_id] = {'checking': True, 'shopType': "upgrades", 'shopPage': 0, 'buyingItem': "", 'itemTarget': "", 'enteringTarget': False}
 
         if parsedCommand == "/admin":
-            if currentMessage.from_user.username == "Adam_ZG":
+            if currentMessage.from_user.username == "AdamZG":
                 try:
                     if messageText.lower().split()[1] == "disable":
                         chatInstanceArray[chat_id]['adminDisable'] = True
@@ -76,6 +77,9 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         atbSendFunctions.sendText(bot, int(messageText.lower().split()[2]), messageText[15 + len(messageText.split()[2]):])
                     elif messageText.lower().split()[1] == "blaze":
                         bot.sendDocument(chat_id=-12788453, document=open("chatStorage/blaze.pdl", "rb"))
+                    elif messageText.lower().split()[1] == "update":
+                        atbFirebase.update()
+                        sendText("Site updated.")
                 except Exception:
                     pass
 
