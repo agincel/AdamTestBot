@@ -268,6 +268,8 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             info = ["Pickaxe", 200.0, "upgrade", 3.5]
         elif itemName == "Jackhammer":
             info = ["Jackhammer", 2500.0, "upgrade", 50]
+        elif itemName == "Laser":
+        	info = ["Laser", 1000000, "upgrade", 22500]
         elif itemName == "Steroid":
             info = ["Steroid", floatRound(getUser(currentMessage.from_user.id)['myYield'] * 0.8), "consumable", 2]
         elif itemName == "Hammer":
@@ -303,12 +305,14 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 returnText += getItemInfo("Chisel")[0]
                 returnText += getItemInfo("Pickaxe")[0]
                 returnText += getItemInfo("Jackhammer")[0]
+                returnText += getItemInfo("Laser")[0]
                 buy = "/btc buy "
                 keyboardLayout.append([buy + "Q-Tip 1"])
                 keyboardLayout.append([buy + "Toothpick 1"])
                 keyboardLayout.append([buy + "Chisel 1"])
                 keyboardLayout.append([buy + "Pickaxe 1"])
                 keyboardLayout.append([buy + "Jackhammer 1"])
+                keyboardLayout.append([buy + "Laser 1"])
                 keyboardLayout.append(["/btc exit"])
             elif newCommand[1] == "consumables":
                 returnText = "Consumables! Page 1:\n"
