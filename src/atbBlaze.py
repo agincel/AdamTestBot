@@ -183,7 +183,7 @@ def blazePM(time_received, currentMessage):
                 currentStreak += 3
                 #END handle streaks#
 
-                builtins.blazeDB.update(user, score=int(user['score']) + pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree)
+                builtins.blazeDB.update(user, score=int(user['score']) + pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree + 4)
                 builtins.blazeDB.update(user, PMtimestamp=int(time.mktime(currentMessage.date.timetuple())))
                 builtins.blazeDB.update(user, penalty=0)
                 userPoints = user['score']
@@ -220,7 +220,8 @@ def blazePM(time_received, currentMessage):
             returningString += str(currentStreak) + " DAY STREAK: +" + str(pointsReceivedFromStreak) + "\n"
         if pointsReceivedFromTopThree > 0:
             returningString += "FIRST " + str(firstRange) + "! +1\n"
-        returningString += "= +" + str(pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree) + "\n"
+        returningString += "DANK 4/20 BONUS! +int(4.20)\n"
+        returningString += "= +" + str(pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree + 4) + "\n"
         returningString += "THEY NOW HAVE " + str(userPoints) + pluralString
 
         if str(currentMessage.chat.id) not in builtins.groupsBlazed:
