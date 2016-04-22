@@ -220,7 +220,7 @@ def blazePM(time_received, currentMessage):
             returningString += str(currentStreak) + " DAY STREAK: +" + str(pointsReceivedFromStreak) + "\n"
         if pointsReceivedFromTopThree > 0:
             returningString += "FIRST " + str(firstRange) + "! +1\n"
-        returningString += "= +" + str(pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree + ) + "\n"
+        returningString += "= +" + str(pointsReceived + pointsReceivedFromStreak + pointsReceivedFromTopThree) + "\n"
         returningString += "THEY NOW HAVE " + str(userPoints) + pluralString
 
         if str(currentMessage.chat.id) not in builtins.groupsBlazed:
