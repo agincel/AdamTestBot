@@ -254,18 +254,55 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         elif parsedCommand == "/quote":
             if passSpamCheck(5):
-                sendText(atbQuote.getQuote(chat_id))
+                try:
+                    sendText(atbQuote.getQuoteAt(chat_id, int(messageText.split()[1])))
+                except(ValueError):
+                    sendText(atbQuote.getQuote(chat_id))
+
+        elif parsedCommand == "/quotefrom":
+            print("\n" + messageText[len("/quotefrom "):])
+            if passSpamCheck(5):
+                sendText(atbQuote.getQuoteFrom(chat_id, messageText[len("/quotefrom "):]))
+
+        elif parsedCommand == "/quoteremove":
+            if currentMessage.from_user.username == "AdamZG" or currentMessage.from_user.username == "magomez96" or currentMessage.from_user.username == "Peribot":
+                if atbQuote.quoteRemove(chat_id, int(messageText.split()[1])):
+                    sendText("Quote " + messageText.split()[1] + " removed")
+                else:
+                    sendText("That quote doesn't exist or you never added any quotes")
 
         elif parsedCommand == "/quoteadd":
-            try:
-                userLastInitial = ''
+            if currentMessage.reply_to_message == None and messageText == "/quoteadd":
+                sendText("Try replying to a message with this command to add it to the quote list")
+            else:
                 try:
-                    userLastInitial = " " + currentMessage.reply_to_message.from_user.last_name[0].upper() + "."
+                    if currentMessage.reply_to_message.from_user.first_name.lower() == 'adamtestbot':
+                        sendText("Not happening")
                 except:
                     pass
-                atbQuote.quoteAdd(chat_id, '/quoteadd "' + currentMessage.reply_to_message.text + '" - ' + currentMessage.reply_to_message.from_user.first_name + userLastInitial)
-            except(Exception):
-                atbQuote.quoteAdd(chat_id, messageText)
+                userLastName = ""
+                try:
+                    userLastName = " " + currentMessage.from_user.last_name
+                except:
+                    pass
+                try:
+                    replyUserLastName = ""
+                    try:
+                        replyUserLastName = " " + currentMessage.reply_to_message.from_user.last_name
+                    except:
+                        pass
+                    atbQuote.quoteAdd(chat_id, currentMessage.reply_to_message.text, currentMessage.reply_to_message.from_user.first_name + replyUserLastName, currentMessage.from_user.first_name + userLastName)
+                    sendText("Quote Added")
+                except(Exception):
+                    quoteParse = currentMessage.text.split("-")
+                    quote = "-".join(quoteParse[:-1])
+                    quote = quote[len("/quoteadd "):].strip()
+                    atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), currentMessage.from_user.first_name + userLastName)
+                    sendText("Quote Added")
+
+        elif parsedCommand == "/quotelegacy":
+            if passSpamCheck(5):
+                sendText(atbQuote.getQuoteLegacy(chat_id))
 
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
