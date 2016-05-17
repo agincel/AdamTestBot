@@ -256,7 +256,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if passSpamCheck(5):
                 try:
                     sendText(atbQuote.getQuoteAt(chat_id, int(messageText.split()[1])))
-                except(ValueError):
+                except:
                     sendText(atbQuote.getQuote(chat_id))
 
         elif parsedCommand == "/quotefrom":
@@ -290,14 +290,14 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     try:
                         replyUserLastName = " " + currentMessage.reply_to_message.from_user.last_name
                     except:
-                        pass
-                    atbQuote.quoteAdd(chat_id, currentMessage.reply_to_message.text, currentMessage.reply_to_message.from_user.first_name + replyUserLastName, currentMessage.from_user.first_name + userLastName)
+                        replyUserLastName = ""
+                    atbQuote.quoteAdd(chat_id, '"' + currentMessage.reply_to_message.text + '"', (currentMessage.reply_to_message.from_user.first_name + replyUserLastName).strip())
                     sendText("Quote Added")
                 except(Exception):
                     quoteParse = currentMessage.text.split("-")
                     quote = "-".join(quoteParse[:-1])
                     quote = quote[len("/quoteadd "):].strip()
-                    atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), currentMessage.from_user.first_name + userLastName)
+                    atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), (currentMessage.from_user.first_name + userLastName).strip())
                     sendText("Quote Added")
 
         elif parsedCommand == "/quotelegacy":
