@@ -22,7 +22,10 @@ def getQuote(chat_id):
     for entry in db:
         entries.append(entry["__id__"])
     recordOfQuote = db[random.choice(entries)]
-    return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+    if recordOfQuote["addedBy"] == None:
+        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"]
+    else:
+        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
 
 def getQuoteAt(chat_id, quote_id):
     db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
@@ -32,7 +35,10 @@ def getQuoteAt(chat_id, quote_id):
         db.open()
     try:
         recordOfQuote = db[quote_id]
-        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+        if recordOfQuote["addedBy"] == None:
+            return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"]
+        else:
+            return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
     except:
         return "Quote not found"
 
@@ -49,7 +55,10 @@ def getQuoteFrom(chat_id, name):
         return "No quotes from this name found"
     else:
         recordOfQuote = db[random.choice(entries)]
-    return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+    if recordOfQuote["addedBy"] == None:
+        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"]
+    else:
+        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
 
 def quoteRemove(chat_id, quote_id):
     db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
@@ -64,7 +73,7 @@ def quoteRemove(chat_id, quote_id):
     except:
         return False
 
-def quoteAdd(chat_id, quoteAdd, quoteOf, whoAdded):
+def quoteAdd(chat_id, quoteAdd, quoteOf, whoAdded = None):
     try:
         db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
         db.create('quote', 'who', 'addedBy', mode="open")
