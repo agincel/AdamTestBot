@@ -8,62 +8,78 @@ import re
 import json
 import traceback
 import os
+import pydblite
 
 import telegram
 
 def getQuote(chat_id):
+    db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
+    if not db.exists():
+        return "You never added a quote!"
+    else:
+        db.open()
+    entries = list()
+    for entry in db:
+        entries.append(entry["__id__"])
+    recordOfQuote = db[random.choice(entries)]
+    return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+
+def getQuoteAt(chat_id, quote_id):
+    db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
+    if not db.exists():
+        return "You never added a quote!"
+    else:
+        db.open()
+    try:
+        recordOfQuote = db[quote_id]
+        return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+    except:
+        return "Quote not found"
+
+def getQuoteFrom(chat_id, name):
+    db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
+    if not db.exists():
+        return "You never added a quote!"
+    else:
+        db.open()
+    entries = list()
+    for entry in (db("who") == name):
+        entries.append(entry["__id__"])
+    if entries == []:
+        return "No quotes from this name found"
+    else:
+        recordOfQuote = db[random.choice(entries)]
+    return "[" + str(recordOfQuote["__id__"]) + "] " + recordOfQuote["quote"] + " - " + recordOfQuote["who"] + " added by " + recordOfQuote["addedBy"]
+
+def quoteRemove(chat_id, quote_id):
+    db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
+    if not db.exists():
+        return False
+    else:
+        db.open()
+    try:
+        del db[quote_id]
+        db.commit()
+        return True
+    except:
+        return False
+
+def quoteAdd(chat_id, quoteAdd, quoteOf, whoAdded):
+    try:
+        db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
+        db.create('quote', 'who', 'addedBy', mode="open")
+        db.insert(quote=quoteAdd, who=quoteOf, addedBy=whoAdded)
+        db.commit()
+    except Exception:
+        print("quoteadd failed")
+        return False
+
+def getQuoteLegacy(chat_id):
     try:
         with open("chatStorage/" + str(chat_id) + "quoteArray.csv", "r+") as csvfile:
             reader = csv.DictReader(csvfile)
             quoteArrayCurrent = list(reader)
-            print(quoteArrayCurrent)
             return random.choice(quoteArrayCurrent)['quote']
     except Exception:
         print(traceback.format_exc())
-        return "[undefined]"
-
-def quoteable(chat_id):
-    response = ""
-    try:
-        with open("chatStorage/" + str(chat_id) + "quoteArray.csv", "r+") as csvfile:
-            reader = csv.DictReader(csvfile)
-            quoteArrayCurrent = list(reader)
-            response = "Current list of quotes:\n"
-            for x in quoteArrayCurrent:
-                response += x['quote'] + "\n"
-        return response
-    except Exception:
-        return "No /quote list defined. Use /quoteadd to add a quote."
-
-def quoteDefine(chat_id, messageText):
-    theText = messageText[len("/quotedefine "):]
-    wholeTextArray = re.split(r'[,*]', theText)
-    fieldnames = ['quote']
-    if len(messageText) > len("/quotedefine "):
-        with open("chatStorage/" + str(chat_id) + "quoteArray.csv", "w+") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for quote in wholeTextArray:
-                writer.writerow({'quote': quote})
-        return True
-    else:
-        with open("chatStorage/" + str(chat_id) + "quoteArray.csv", "w+") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-        return False
-
-def quoteAdd(chat_id, messageText):
-    try:
-        if len(messageText) > len("/quoteadd "):
-            messageText = messageText.replace(",","").replace('*', "'")
-            with open("chatStorage/" + str(chat_id) + "quoteArray.csv", "r+") as csvfile:
-                reader = csv.DictReader(csvfile)
-                quoteArrayCurrent = []
-                for row in reader:
-                    quoteArrayCurrent.append(row['quote'])
-                myStr = ", ".join(quoteArrayCurrent)
-            return quoteDefine(chat_id, "/quotedefine " + myStr + ", " + messageText.replace("/quoteadd ", ""))
-        else:
-            return False
-    except Exception:
-        return quoteDefine(chat_id, messageText.replace("quoteadd ", "quotedefine "))
+        return "You never used the old quote format"
