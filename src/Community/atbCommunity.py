@@ -12,6 +12,7 @@ import json
 import traceback
 import os
 import telegram
+from urllib.request import urlopen
 try:
     import psutil
 except:
@@ -304,6 +305,20 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if passSpamCheck(5):
                 sendText(atbQuote.getQuoteLegacy(chat_id))
 
+        elif parsedCommand == "/pogo":
+            start = time.time()
+            nf = urlopen("https://pgorelease.nianticlabs.com/plfe/")
+            page = nf.read()
+            end = time.time()
+            nf.close()
+            rTime = round((end - start) * 1000)
+            if (rTime < 800):
+                sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
+            elif (rTime >= 800 and time < 3000):
+                sendText("Pokémon GO's servers are struggling\n{}ms Response Time".format(rTime))
+            elif (rTime >= 3000):
+                sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
+
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
             response = "/mom - get the camera\n"
@@ -320,7 +335,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/grill - I'm a George Foreman grill!\n"
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
-            response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!"
+            response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
+            response += "/pogo - Want to know if Pokémon GO's server's are up?"
             sendText(response)
 
         else:
