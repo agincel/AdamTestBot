@@ -12,6 +12,7 @@ import json
 import traceback
 import os
 import telegram
+from threading import Thread
 from urllib.request import urlopen
 try:
     import psutil
@@ -306,18 +307,24 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 sendText(atbQuote.getQuoteLegacy(chat_id))
 
         elif parsedCommand == "/pogo":
-            start = time.time()
-            nf = urlopen("https://pgorelease.nianticlabs.com/plfe/")
-            page = nf.read()
-            end = time.time()
-            nf.close()
-            rTime = round((end - start) * 1000)
-            if (rTime < 800):
-                sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
-            elif (rTime >= 800 and rTime < 3000):
-                sendText("Pokémon GO's servers are struggling\n{}ms Response Time".format(rTime))
-            elif (rTime >= 3000):
-                sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
+            def getPokeInfo():
+                start = time.time()
+                try:
+                    nf = urlopen("https://pgorelease.nianticlabs.com/plfe/", timeout = 3)
+                    page = nf.read()
+                    end = time.time()
+                    nf.close()
+                except:
+                	end=time.time()
+                rTime = round((end - start) * 1000)
+                if (rTime < 800):
+                    sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
+                elif (rTime >= 800 and rTime < 3000):
+                    sendText("Pokémon GO's servers are struggling\n{}ms Response Time".format(rTime))
+                elif (rTime >= 3000):
+                    sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
+            myThread = Thread(target=getPokeInfo)
+            myThread.start()
 
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
