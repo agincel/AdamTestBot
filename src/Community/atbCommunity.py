@@ -314,7 +314,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             rTime = round((end - start) * 1000)
             if (rTime < 800):
                 sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
-            elif (rTime >= 800 and time < 3000):
+            elif (rTime >= 800 and rTime < 3000):
                 sendText("Pokémon GO's servers are struggling\n{}ms Response Time".format(rTime))
             elif (rTime >= 3000):
                 sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
