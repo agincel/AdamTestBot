@@ -142,7 +142,7 @@ def blazePM(time_received, currentMessage):
         dbLen += 1
 
 
-    firstRange = int(dbLen/6)
+    firstRange = 3 #int(dbLen/6)
 
     for user in builtins.blazeDB: #search for user
         if int(user['id']) == currentMessage.from_user.id: #found them
