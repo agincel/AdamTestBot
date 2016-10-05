@@ -346,7 +346,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
-            response += "/pogo - Want to know if Pokémon GO's server's are up?"
+            response += "/pogo - Want to know if Pokémon GO's servers are up?"
             sendText(response)
 
         else:
