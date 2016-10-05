@@ -77,11 +77,11 @@ def quoteAdd(chat_id, quoteAdd, quoteOf, whoAdded = None):
     try:
         db = pydblite.Base('chatStorage/quoteDB' + str(chat_id) + '.pdl')
         db.create('quote', 'who', 'addedBy', mode="open")
-        db.insert(quote=quoteAdd, who=quoteOf, addedBy=whoAdded)
+        q = db.insert(quote=quoteAdd, who=quoteOf, addedBy=whoAdded)
         db.commit()
+        return "Quote {} added".format(q)
     except Exception:
-        print("quoteadd failed")
-        return False
+        return "quoteadd failed"
 
 def getQuoteLegacy(chat_id):
     try:

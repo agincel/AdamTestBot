@@ -293,14 +293,14 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         replyUserLastName = " " + currentMessage.reply_to_message.from_user.last_name
                     except:
                         replyUserLastName = ""
-                    atbQuote.quoteAdd(chat_id, '"' + currentMessage.reply_to_message.text + '"', (currentMessage.reply_to_message.from_user.first_name + replyUserLastName).strip())
-                    sendText("Quote Added")
+                    quote_resp = atbQuote.quoteAdd(chat_id, '"' + currentMessage.reply_to_message.text + '"', (currentMessage.reply_to_message.from_user.first_name + replyUserLastName).strip())
+                    sendText(quote_resp)
                 except(Exception):
                     quoteParse = currentMessage.text.split("-")
                     quote = "-".join(quoteParse[:-1])
                     quote = quote[len("/quoteadd "):].strip()
-                    atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), (currentMessage.from_user.first_name + userLastName).strip())
-                    sendText("Quote Added")
+                    quote_resp = atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), (currentMessage.from_user.first_name + userLastName).strip())
+                    sendText(quote_resp)
 
         elif parsedCommand == "/quotelegacy":
             if passSpamCheck(5):
