@@ -293,14 +293,14 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         replyUserLastName = " " + currentMessage.reply_to_message.from_user.last_name
                     except:
                         replyUserLastName = ""
-                    atbQuote.quoteAdd(chat_id, '"' + currentMessage.reply_to_message.text + '"', (currentMessage.reply_to_message.from_user.first_name + replyUserLastName).strip())
-                    sendText("Quote Added")
+                    quote_resp = atbQuote.quoteAdd(chat_id, '"' + currentMessage.reply_to_message.text + '"', (currentMessage.reply_to_message.from_user.first_name + replyUserLastName).strip())
+                    sendText(quote_resp)
                 except(Exception):
                     quoteParse = currentMessage.text.split("-")
                     quote = "-".join(quoteParse[:-1])
                     quote = quote[len("/quoteadd "):].strip()
-                    atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), (currentMessage.from_user.first_name + userLastName).strip())
-                    sendText("Quote Added")
+                    quote_resp = atbQuote.quoteAdd(chat_id, quote, quoteParse[-1].strip(), (currentMessage.from_user.first_name + userLastName).strip())
+                    sendText(quote_resp)
 
         elif parsedCommand == "/quotelegacy":
             if passSpamCheck(5):
@@ -346,7 +346,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
-            response += "/pogo - Want to know if Pokémon GO's server's are up?"
+            response += "/pogo - Want to know if Pokémon GO's servers are up?"
             sendText(response)
 
         else:
