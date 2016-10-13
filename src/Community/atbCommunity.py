@@ -329,6 +329,13 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             myThread = Thread(target=getPokeInfo)
             myThread.start()
 
+        elif parsedCommand == "/discourse":
+            if passSpamCheck():
+                if (random.randint(0, 1) == 0):
+                    sendPhoto("discourse.jpg")
+                else:
+                    sendText("http://thediscour.se")
+
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
             response = "/mom - get the camera\n"
@@ -346,7 +353,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
-            response += "/pogo - Want to know if Pokémon GO's servers are up?"
+            response += "/pogo - Want to know if Pokémon GO's servers are up?\n"
+            response += "/discourse - Break in case of spicy discourse"
             sendText(response)
 
         else:
