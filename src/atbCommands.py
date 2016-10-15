@@ -18,6 +18,7 @@ from . import atbLikes
 from . import atbBlaze
 from . import atbBTC
 from . import atbFirebase
+from . import atbMarkov
 from .Community import atbCommunity as atbCommunity
 
 from pydblite import Base #The PyDbLite stuff
@@ -147,6 +148,10 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         elif parsedCommand == "/motd":
             sendText(builtins.blazeMessage)
+
+        elif parsedCommand == "/markov":
+            if passSpamCheck(30) or currentMessage.from_user.id == 44961843:
+                sendText(atbMarkov.getMarkov(messageText))
 
         elif parsedCommand == "/blaze" and chat_id != 106128903:
             sendText(atbBlaze.blaze(currentMessage))
@@ -340,6 +345,9 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
         else:
             if not atbCommunity.process(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge):
                 pass
+
+        if chat_id < 0: #only listen to group chats
+            atbMarkov.processText(messageText)
 
         return True
     except Exception:

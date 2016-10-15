@@ -72,8 +72,10 @@ builtins.btcStockDB.create('name', 'description', 'letter', 'fullRange', 'subRan
 
 builtins.btcDB1 = Base('chatStorage/btc1.pdl')
 builtins.btcDB1.create('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id', 'stocks', 'other', mode="open")
-
 # END persistent blaze information
+
+builtins.markov = None
+builtins.markovText = ""
 
 blacklist = [-23535579, -28477145]
 
