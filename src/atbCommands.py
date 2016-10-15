@@ -346,7 +346,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if not atbCommunity.process(bot, chat_id, parsedCommand, messageText, currentMessage, update, instanceAge):
                 pass
 
-        if chat_id < 0: #only listen to group chats
+        if chat_id < 0 and len(messageText) > 10: #only listen to group chats
             atbMarkov.processText(messageText)
 
         return True
