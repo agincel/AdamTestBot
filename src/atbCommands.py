@@ -88,7 +88,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     pass
 
         elif messageText.lower().startswith("@adamtestbot"):
-            sendText(atbMiscFunctions.atReply())
+            word = random.choice(["i", "i'm", "i've", "i'll", "you", "you'll", "maybe", "you've"])
+            sendText(atbMarkov.getMarkov("/markov " + word))
 
         elif parsedCommand == "/whodefine":
             if atbAdLib.whoDefine(chat_id, messageText):
