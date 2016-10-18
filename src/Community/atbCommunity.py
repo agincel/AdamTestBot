@@ -277,11 +277,6 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if currentMessage.reply_to_message == None and messageText == "/quoteadd":
                 sendText("Try replying to a message with this command to add it to the quote list")
             else:
-                try:
-                    if currentMessage.reply_to_message.from_user.first_name.lower() == 'adamtestbot':
-                        sendText("Not happening")
-                except:
-                    pass
                 userLastName = ""
                 try:
                     userLastName = " " + currentMessage.from_user.last_name
