@@ -267,6 +267,12 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     sendText(messageText[len("/yiss "):])
                 else:
                     sendText("breadcrumbs")
+        elif parsedCommand == "/erlang":
+            if passSpamCheck(30):
+                sendText("Erlang? Did you mean the most")
+                sendText(random.choice(["DISGUSTING", "DISGRACEFUL", "OBTUSE", "CONFUSING", "UNINTUITIVE"]))
+                sendText("PIECE OF SHIT", "ABHORRENT", "STUPID", "GARBAGE")
+                sendText("LANGUAGE I HAVE EVER HAD THE DISPLEASURE OF GAZING UPON WITH MY OWN TWO EYES")
 
         elif parsedCommand == "/objection":
             sendText(atbMiscFunctions.objectionResponse(currentMessage), replyingMessageID=currentMessage.reply_to_message.message_id)
