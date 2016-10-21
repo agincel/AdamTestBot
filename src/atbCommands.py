@@ -268,7 +268,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 else:
                     sendText("breadcrumbs")
         elif parsedCommand == "/erlang":
-            if passSpamCheck(30):
+            if passSpamCheck(1.5):
                 #sendText("Erlang? Did you mean the most")
                 #sendText(random.choice(["DISGUSTING", "DISGRACEFUL", "OBTUSE", "CONFUSING", "UNINTUITIVE"]))
                 #sendText(random.choice(["PIECE OF SHIT", "ABHORRENT", "STUPID", "GARBAGE"]))
