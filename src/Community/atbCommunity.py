@@ -234,7 +234,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                 cpuavg = round(sum(cpu) / float(len(cpu)), 1)
                 memuse = psutil.virtual_memory()[2]
                 diskuse = psutil.disk_usage('/')[3]
-                sendText("The CPU uasge is " + str(cpuavg) + "%, the memory usage is " + str(memuse) + "%, and " + str(diskuse) + "% of the disk has been used.")
+                sendText("The CPU usage is " + str(cpuavg) + "%, the memory usage is " + str(memuse) + "%, and " + str(diskuse) + "% of the disk has been used.")
 
         elif parsedCommand == "/grill":
             if passSpamCheck():
