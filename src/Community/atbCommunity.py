@@ -326,9 +326,6 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
 
         elif parsedCommand == "/discourse":
             if passSpamCheck():
-                if (random.randint(0, 1) == 0):
-                    sendPhoto("discourse.jpg")
-                else:
                     sendText("http://thediscour.se")
 
         elif parsedCommand == "/status":
