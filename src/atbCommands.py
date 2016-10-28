@@ -178,6 +178,10 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if passSpamCheck():
                 sendPhoto("engling.jpg")
 
+        elif parsedCommand == "/nice":
+            if passSpamCheck():
+                sendPhoto("nice.jpg")
+
         elif parsedCommand == "/smash":
             sendText(atbMiscFunctions.smashCommand())
 
