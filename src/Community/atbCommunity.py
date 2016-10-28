@@ -12,8 +12,6 @@ import json
 import traceback
 import os
 import telegram
-from threading import Thread
-from urllib.request import urlopen
 try:
     import psutil
 except:
@@ -301,29 +299,6 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             if passSpamCheck(5):
                 sendText(atbQuote.getQuoteLegacy(chat_id))
 
-        elif parsedCommand == "/pogo":
-            def getPokeInfo():
-                start = time.time()
-                try:
-                    nf = urlopen("https://pgorelease.nianticlabs.com/plfe/", timeout = 3)
-                    page = nf.read()
-                    end = time.time()
-                    nf.close()
-                except TimeoutError:
-                    end = time.time()
-                    rTime = round((end - start) * 1000)
-                    if (rTime < 800):
-                        sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
-                    elif (rTime >= 800 and rTime < 3000):
-                        sendText("Pokémon GO's servers are struggling\n{}ms Response Time".format(rTime))
-                    elif (rTime >= 3000):
-                        sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
-                except Exception as e:
-                    sendText("Pokémon GO's servers are really not doing well\nHere's what I got back\n" + e.__str__())
-
-            myThread = Thread(target=getPokeInfo)
-            myThread.start()
-
         elif parsedCommand == "/discourse":
             if passSpamCheck():
                     sendText("http://thediscour.se")
@@ -349,7 +324,6 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/pants - Pants?\n"
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
-            response += "/pogo - Want to know if Pokémon GO's servers are up?\n"
             response += "/discourse - Break in case of spicy discourse\n"
             response += "/status - View a handy status map for ATB."
             sendText(response)
