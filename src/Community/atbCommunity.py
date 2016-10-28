@@ -274,7 +274,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     sendText("That quote doesn't exist or you never added any quotes")
 
         elif parsedCommand == "/quoteadd":
-            if currentMessage.reply_to_message == None and messageText == "/quoteadd":
+            if currentMessage.reply_to_message is None and messageText == "/quoteadd":
                 sendText("Try replying to a message with this command to add it to the quote list")
             else:
                 userLastName = ""
@@ -310,7 +310,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     end = time.time()
                     nf.close()
                 except TimeoutError:
-                    end=time.time()
+                    end = time.time()
                     rTime = round((end - start) * 1000)
                     if (rTime < 800):
                         sendText("Pokémon GO is UP\n{}ms Response Time".format(rTime))
@@ -320,7 +320,7 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                         sendText("Pokémon GO is DOWN\n{}ms Response Time".format(rTime))
                 except Exception as e:
                     sendText("Pokémon GO's servers are really not doing well\nHere's what I got back\n" + e.__str__())
-            
+
             myThread = Thread(target=getPokeInfo)
             myThread.start()
 
@@ -330,6 +330,10 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
                     sendPhoto("discourse.jpg")
                 else:
                     sendText("http://thediscour.se")
+
+        elif parsedCommand == "/status":
+            if passSpamCheck():
+                sendText("https://prtg.scrubsoft.com:8080/public/mapshow.htm?id=2243&mapid=AdamTestBot")
 
         #this command should go last:
         elif parsedCommand == "/community": #add your command to this list
@@ -349,7 +353,8 @@ def process(bot, chat_id, parsedCommand, messageText, currentMessage, update, in
             response += "/broken - Tell Matt Gomez your stuff is broken.\n"
             response += "/quote - Pulls a random quote from a list. Reply to a message with /quoteadd to add one!\n"
             response += "/pogo - Want to know if Pokémon GO's servers are up?\n"
-            response += "/discourse - Break in case of spicy discourse"
+            response += "/discourse - Break in case of spicy discourse\n"
+            response += "/status - View a handy status map for ATB."
             sendText(response)
 
         else:
