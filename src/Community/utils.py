@@ -26,8 +26,8 @@ def printdb(dbpath): #Prints the contents of a PyDBLite database to the console
         for obj in db:
             retstr += str(obj)
             retstr += "\n"
-        print(retstr)
-        return retstr
+        encoded = retstr.encode("utf-8", errors='ignore')
+        print(encoded)
     else:
         print("The database does not exist or is corrupt.\n")
 def likeconvert(likesRoot):
