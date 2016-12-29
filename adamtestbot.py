@@ -131,49 +131,11 @@ while running:
         #calculate BTC once per hour
         if currentTime.minute == 0: #it's the start of an hour
             for user in builtins.btcDB:
-                multiplier = 1
-                if user['positiveYields'] > 0:
-                    multiplier = user['positiveMultiplier']
-                    builtins.btcDB.update(user, positiveYields=int(user['positiveYields']) - 1)
-                if user['zeroYields'] > 0:
-                    multiplier *= 0
-                    builtins.btcDB.update(user, zeroYields=int(user['zeroYields']) - 1)
-                if user['negativeYields'] > 0:
-                    multiplier *= user['negativeMultiplier']
-                    builtins.btcDB.update(user, negativeYields=int(user['negativeYields']) - 1)
-                builtins.btcDB.update(user, money=max(round(user['money'] + (user['myYield'] * multiplier), 3), 0))
-            builtins.btcDB.commit()
+                if user['username'] == 'Dark_Shadowfall': #legacy, just do it for Mahoney
+                    builtins.btcDB.update(user, money=int(user['money'] + user['myYield']))
+            buitlins.btcDB.commit()
 
-            #update stocks
-            stockValueTotal = 0
-            stockNum = 0
-            stockA = -1
-            for stock in builtins.btcStockDB:
-                if stock['letter'] != 'A':
-                    stockNum += 1
-                    stockValueTotal += stock['currentValue']
-                    lowerBound = stock['selectedSubRangeStart']
-                    builtins.btcStockDB.update(stock, selectedSubRangeStart=round(random.uniform(stock['fullRange'][0], stock['fullRange'][1]), 2))
-                    upperBound = stock['subRangeSize'] + lowerBound
-                    delta = round(random.uniform(lowerBound, upperBound), 2)
-                    forecastUp = True
-                    if abs(stock['selectedSubRangeStart']) > abs(stock['selectedSubRangeStart'] + stock['subRangeSize']):
-                        forecastUp = False
-                    currentHistory = stock['history']
-
-                    builtins.btcStockDB.update(stock, currentValue=round(max(stock['currentValue'] + delta, 2.5), 3))
-                    builtins.btcStockDB.update(stock, forecast=forecastUp)
-
-                    currentHistory.append(stock['currentValue'])
-                    builtins.btcStockDB.update(stock, history=currentHistory)
-                else:
-                    stockA = stock
-            currentHistory = stockA['history']
-            builtins.btcStockDB.update(stockA, currentValue=round((stockValueTotal / stockNum), 2))
-            currentHistory.append(stockA['currentValue'])
-            builtins.btcStockDB.update(stockA, history=currentHistory)
-            builtins.btcStockDB.commit()
-        if (currentTime.minute % 5) == 0:
+        if (currentTime.minute % 5) == 0: #every five minutes update the firebase
             try:
                 atbFirebase.update()
             except:

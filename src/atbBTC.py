@@ -38,7 +38,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
     messageText.replace("@", "")
     newCommand = re.split(r'[@\s:,\'*]+', messageText[len("/btc"):].lstrip())
     strBtc = "Bt₵"
-    strBotCoin = "Bot₵oin Beta"
+    strBotCoin = "Bot₵oin"
     strPerHour = "⁄hr"
     strPerShare = "⁄share"
 
@@ -412,8 +412,8 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             if itemInfo != []:
                 user = getUser(currentMessage.from_user.id)
                 if itemInfo[2] != "weapon":
-                    if float(itemInfo[1]) * quantity > float(user['money']):
-                        quantity = int(float(user['money'])/float(itemInfo[1]))
+                    #if float(itemInfo[1]) * quantity > float(user['money']):
+                    quantity = int(float(user['money'])/float(itemInfo[1])) #always assume max now
                     if float(user['money']) >= float(itemInfo[1]) * quantity and quantity != 0: #can afford
                         quantityPurchased = quantity
                     else:
@@ -433,6 +433,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                     else:
                         return ["You already have a consumable active.", ""]
                 elif itemInfo[2] == "weapon":
+                    return ["Sorry, weapons have been disabled.", ""]
                     isConfirming = False
                     target = ""
                     try:
@@ -539,130 +540,132 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
                 builtins.btcDB.commit()
 
     # -------- end helper function declarations ------- #
-
-    if newCommand[0] == '' and int(chat_id) < 0:
-        return ["Check the Ledger by typing /btc in a private chat with me. Join " + strBotCoin + " by typing '/btc join'!", ""]
-    elif newCommand[0] == 'list':
-        return [getLedger("money"), "markdown"]
-    elif newCommand[0] == "join":
-        if getUser(currentMessage.from_user.id) == None:
-            defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
-            username = currentMessage.from_user.username
-            if username == "":
-                username = currentMessage.from_user.first_name + str(int(currentMessage.from_user.id / 100000))
-            name = currentMessage.from_user.first_name
-            userLastInitial = ""
-            try:
-                userLastInitial = currentMessage.from_user.last_name[0].upper()
-                name += " " + userLastInitial
-            except:
-                pass
-            builtins.btcDB.insert(currentMessage.from_user.id, username, name, 1.0, 0.1, 0, 0, -1, 0, 0, 0, 000000, defaultStockArray, {})
-            builtins.btcDB.commit()
-            return [name + " has joined " + strBotCoin + "!\nType '/btc help' in a private chat with me to get started.", ""]
-        else:
-            return [currentMessage.from_user.first_name + ", you're already on the ledger.", ""]
-    elif newCommand[0] == "pay":
-            return pay(newCommand)
-    elif getUser(currentMessage.from_user.id) == None:
-        return ["Type '/btc join' to play " + strBotCoin + "!", ""]
-    if int(chat_id) > 0: # if we're in a private chat
-        try:
-            print(newCommand)
-        except:
-            pass
-
-        updateUserChat(currentMessage.from_user.id, chat_id) # make sure we know their chat_id
-
-        if newCommand[0] == "":
-            return [getLedger(), "markdown"]
-        elif newCommand[0] == "help":
-            return [getHelp(), "markdown"]
-        elif newCommand[0] == "intro":
-            return [getIntro(), ""]
-        elif newCommand[0] == "shop":
-            return shop(newCommand)
-        elif newCommand[0] == "buy":
-            return buy(newCommand)
-        elif newCommand[0] == "stock":
-            return stock(newCommand)
-        elif newCommand[0] == "portfolio":
-            return [getPortfolio(), "markdown"]
-        elif newCommand[0] == "me":
-            return [getMe(), "markdown"]
-        elif newCommand[0] == "exit":
-            return ["Bye!", ""]
-        elif newCommand[0] == "quote":
-            return [stockQuote(), "markdown"]
-        elif newCommand[0] == "alliance":
-            hasAlliance = False
-            try:
-                hasAlliance = newCommand[1] != ""
-            except:
-                pass
-            if not hasAlliance:
-                return ["Usage: '/btc alliance [Symbol]'\nType '/btc alliance remove' or '/btc alliance leave' to leave an alliance.", ""]
-            sym = newCommand[1][0:3].upper()
-            user = getUser(currentMessage.from_user.id)
-            o = user['other']
-            if newCommand[1] == "remove" or newCommand[1] == "leave":
-                o['alliance'] = ""
-                builtins.btcDB.update(user, other=o)
-                builtins.btcDB.commit()
-                return ["You have left your alliance.", ""]
-            o['alliance'] = sym
-            builtins.btcDB.update(user, other=o)
-            builtins.btcDB.commit()
-            return ["You are now part of the " + sym + " alliance.", ""]
-        elif newCommand[0] == "remove":
-            builtins.btcDB.delete(getUser(currentMessage.from_user.id))
-            return["Sorry to see you go. :(", ""]
-        elif currentMessage.from_user.username == "AdamZG":
-            if newCommand[0] == "commit":
-                builtins.btcDB.commit()
-                return ["Committed the BTC database.", ""]
-            elif newCommand[0] == "debug":
-                print(getUserByUsername("AdamZG")['stocks'])
-                return ["Printed the thing?", ""]
-            elif newCommand[0] == "migrate":
+    
+    if currentMessage.from_user.username == "Dark_Shadowfall":
+        if newCommand[0] == '' and int(chat_id) < 0:
+            return ["Check the Ledger by typing /btc in a private chat with me. Join " + strBotCoin + " by typing '/btc join'!", ""]
+        elif newCommand[0] == 'list':
+            return [getLedger("money"), "markdown"]
+        elif newCommand[0] == "join":
+            if getUser(currentMessage.from_user.id) == None:
                 defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
-                for user in builtins.btcDB:
-                    builtins.btcDB1.insert(user['id'], user['username'], user['name'], user['money'], user['myYield'], user['positiveMultiplier'], user['positiveYields'], user['zeroMultiplier'], user['zeroYields'], user['negativeMultiplier'], user['negativeYields'], user['chat_id'], defaultStockArray, {})
-                builtins.btcDB1.commit()
-                return ["Migrated.", ""]
-            elif newCommand[0] == "resetStocks":
-                defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
-                for user in builtins.btcDB:
-                    builtins.btcDB.update(user, stocks=defaultStockArray.copy())
-                builtins.btcDB.commit()
-                return ["reset stocks. economies that exist: not ours", ""]
-            elif newCommand[0] == "iS":
-                defineStocks()
-                return ["We did the stocks", ""]
-            elif newCommand[0] == "uS":
-                i = 1
+                username = currentMessage.from_user.username
+                if username == "":
+                    username = currentMessage.from_user.first_name + str(int(currentMessage.from_user.id / 100000))
+                name = currentMessage.from_user.first_name
+                userLastInitial = ""
                 try:
-                    i = int(newCommand[-1])
+                    userLastInitial = currentMessage.from_user.last_name[0].upper()
+                    name += " " + userLastInitial
                 except:
                     pass
-                for a in range(0, i):
-                    print(a)
-                    updateStocks()
-                return ["Updated stocks " + str(i) + " times", ""]
-            elif newCommand[0] == "give":
-                user = getUserByUsername(newCommand[1])
-                builtins.btcDB.update(user, money=user['money'] + int(newCommand[2]))
-                sendTextTo("Admin gave you " + newCommand[2] + strBtc, user['chat_id'])
-                return ["Wow, cheater.", ""]
-            elif newCommand[0] == "updateStockRange":
-                return updateStockRange(newCommand[1], float(newCommand[2]), float(newCommand[3]))
-            elif newCommand[0] == "updateStockRangeSize":
-                return updateStockRangeSize(newCommand[1], float(newCommand[2]))
-            elif newCommand[0] == "getStockInfo":
-                return getStockInfo(newCommand[-1])
+                builtins.btcDB.insert(currentMessage.from_user.id, username, name, 1.0, 0.1, 0, 0, -1, 0, 0, 0, 000000, defaultStockArray, {})
+                builtins.btcDB.commit()
+                return [name + " has joined " + strBotCoin + "!\nType '/btc help' in a private chat with me to get started.", ""]
+            else:
+                return [currentMessage.from_user.first_name + ", you're already on the ledger.", ""]
+        elif newCommand[0] == "pay":
+                return pay(newCommand)
+        elif getUser(currentMessage.from_user.id) == None:
+            return ["Type '/btc join' to play " + strBotCoin + "!", ""]
+        if int(chat_id) > 0: # if we're in a private chat
+            try:
+                print(newCommand)
+            except:
+                pass
 
+            updateUserChat(currentMessage.from_user.id, chat_id) # make sure we know their chat_id
+
+            if newCommand[0] == "":
+                return [getLedger(), "markdown"]
+            elif newCommand[0] == "help":
+                return [getHelp(), "markdown"]
+            elif newCommand[0] == "intro":
+                return [getIntro(), ""]
+            elif newCommand[0] == "shop":
+                return shop(newCommand)
+            elif newCommand[0] == "buy":
+                return buy(newCommand)
+            elif newCommand[0] == "stock":
+                return stock(newCommand)
+            elif newCommand[0] == "portfolio":
+                return [getPortfolio(), "markdown"]
+            elif newCommand[0] == "me":
+                return [getMe(), "markdown"]
+            elif newCommand[0] == "exit":
+                return ["Bye!", ""]
+            elif newCommand[0] == "quote":
+                return [stockQuote(), "markdown"]
+            elif newCommand[0] == "alliance":
+                hasAlliance = False
+                try:
+                    hasAlliance = newCommand[1] != ""
+                except:
+                    pass
+                if not hasAlliance:
+                    return ["Usage: '/btc alliance [Symbol]'\nType '/btc alliance remove' or '/btc alliance leave' to leave an alliance.", ""]
+                sym = newCommand[1][0:3].upper()
+                user = getUser(currentMessage.from_user.id)
+                o = user['other']
+                if newCommand[1] == "remove" or newCommand[1] == "leave":
+                    o['alliance'] = ""
+                    builtins.btcDB.update(user, other=o)
+                    builtins.btcDB.commit()
+                    return ["You have left your alliance.", ""]
+                o['alliance'] = sym
+                builtins.btcDB.update(user, other=o)
+                builtins.btcDB.commit()
+                return ["You are now part of the " + sym + " alliance.", ""]
+            elif newCommand[0] == "remove":
+                builtins.btcDB.delete(getUser(currentMessage.from_user.id))
+                return["Sorry to see you go. :(", ""]
+            elif currentMessage.from_user.username == "AdamZG":
+                if newCommand[0] == "commit":
+                    builtins.btcDB.commit()
+                    return ["Committed the BTC database.", ""]
+                elif newCommand[0] == "debug":
+                    print(getUserByUsername("AdamZG")['stocks'])
+                    return ["Printed the thing?", ""]
+                elif newCommand[0] == "migrate":
+                    defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
+                    for user in builtins.btcDB:
+                        builtins.btcDB1.insert(user['id'], user['username'], user['name'], user['money'], user['myYield'], user['positiveMultiplier'], user['positiveYields'], user['zeroMultiplier'], user['zeroYields'], user['negativeMultiplier'], user['negativeYields'], user['chat_id'], defaultStockArray, {})
+                    builtins.btcDB1.commit()
+                    return ["Migrated.", ""]
+                elif newCommand[0] == "resetStocks":
+                    defaultStockArray = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0, 'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0, 'L': 0, 'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0, 'R': 0, 'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0, 'X': 0, 'Y': 0, 'Z': 0}
+                    for user in builtins.btcDB:
+                        builtins.btcDB.update(user, stocks=defaultStockArray.copy())
+                    builtins.btcDB.commit()
+                    return ["reset stocks. economies that exist: not ours", ""]
+                elif newCommand[0] == "iS":
+                    defineStocks()
+                    return ["We did the stocks", ""]
+                elif newCommand[0] == "uS":
+                    i = 1
+                    try:
+                        i = int(newCommand[-1])
+                    except:
+                        pass
+                    for a in range(0, i):
+                        print(a)
+                        updateStocks()
+                    return ["Updated stocks " + str(i) + " times", ""]
+                elif newCommand[0] == "give":
+                    user = getUserByUsername(newCommand[1])
+                    builtins.btcDB.update(user, money=user['money'] + int(newCommand[2]))
+                    sendTextTo("Admin gave you " + newCommand[2] + strBtc, user['chat_id'])
+                    return ["Wow, cheater.", ""]
+                elif newCommand[0] == "updateStockRange":
+                    return updateStockRange(newCommand[1], float(newCommand[2]), float(newCommand[3]))
+                elif newCommand[0] == "updateStockRangeSize":
+                    return updateStockRangeSize(newCommand[1], float(newCommand[2]))
+                elif newCommand[0] == "getStockInfo":
+                    return getStockInfo(newCommand[-1])
+
+        else:
+            print("Not valid private chat command.")
+            return ["", "no"]
     else:
-        print("Not valid private chat command.")
-        return ["", "no"]
-
+        return [strBotCoin + " has officially ended. Matt Mahoney, aka @Dark_Shadowfall, is the undisputed winner. A new game will be coming to replace it at some point in the future. Thanks for playing!", ""]
 #('id', 'username', 'name', 'money', 'myYield', 'positiveMultiplier', 'positiveYields', 'zeroMultiplier', 'zeroYields', 'negativeMultiplier', 'negativeYields', 'chat_id')
