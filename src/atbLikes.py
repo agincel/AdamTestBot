@@ -45,7 +45,7 @@ def handleLikes(isLiking, currentMessage):
                         text = 'f'
                     writer.writerow({'messageID': likedID, 'liked': text})
         else:
-            file('chatStorage/likes/history/' + str(currentMessage.from_user.id) + 'history.csv', 'w').close()
+            #file('chatStorage/likes/history/' + str(currentMessage.from_user.id) + 'history.csv', 'w+').close()
             with open('chatStorage/likes/history/' + str(currentMessage.from_user.id) + 'history.csv', 'w+') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
