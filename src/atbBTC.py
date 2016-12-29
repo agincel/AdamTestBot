@@ -667,7 +667,7 @@ def handleBTC(bot, chat_id, parsedCommand, messageText, currentMessage, update, 
             print("Not valid private chat command.")
             return ["", "no"]
     else:
-        if (newCommand[1] == "ledger"):
+        if (newCommand[0] == "ledger"):
             return [getLedger(), "markdown"]
         else:
             return [strBotCoin + " has officially ended. Matt Mahoney, aka @Dark_Shadowfall, is the undisputed winner. A new game will be coming to replace it at some point in the future. Thanks for playing!\n\nType /btc ledger to see the ledger as it is preserved.", ""]
